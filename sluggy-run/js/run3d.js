@@ -1,6 +1,7 @@
 // Sluggy Run — 3D chase mode: behind-the-slug, three lanes, swipe to dodge.
 import { drawCoin, PAL, OUT } from '../../sluggy/js/art.js';
 import { createGL } from './gl3d.js';
+import { setZone, restartSong } from './audio.js';
 import { ZONES, TW, TH, drawObstacle, drawPower, drawHat, POWERS, drawProp, drawWormFront } from './zones.js';
 
 const TAU = Math.PI * 2, rnd = Math.random, lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -51,7 +52,7 @@ export function createRun3D(env) {
   function reset() {
     if (GL === undefined) { try { GL = env.noGL ? null : createGL(env.glCanvas, { tile: env.tile, ZLEN }); } catch (err) { console.warn('WebGL unavailable, using flat renderer', err); GL = null; } }
     if (GL) { GL.reset(); GL.show(true); }
-    layout(); shownS = shownD = -1;
+    layout(); shownS = shownD = -1; setZone(0); restartSong();
     R = { state: 'run', t: 0, z: 0, speed: 0, camX: 0, bend: 0, bonus: 0, coins: 0, stomps: 0, combo: 0, zi: 0, prevZ: -1, fade: 1, shake: 0, inv: 0, deadT: 0, done: false, cause: '',
       p: { lane: 1, x: 0, y: 0, vy: 0, on: true, slide: 0, lean: 0, rot: 0, sq: 0, buf: 0 }, pw: { magnet: 0, rush: 0, x2: 0, shield: false },
       ents: [], parts: [], floats: [], trail: [], nextZ: 1700, nextPow: 8000 + rnd() * 3000, free: 1, mile: 1, record: false };
@@ -109,7 +110,7 @@ export function createRun3D(env) {
     if (p.on) { p.vy = JV * (moonNow() ? 0.85 : 1); p.on = false; p.slide = 0; p.sq = 1; sfx.jump(); } else p.buf = 0.15;
   }
   function slide() { if (R.state !== 'run') return; const p = R.p; if (!p.on) p.vy = Math.min(p.vy, -900); p.slide = 0.62; sfx.slide(); }
-  function move(d) { if (R.state !== 'run') return; const p = R.p, l = clamp(p.lane + d, 0, 2); if (l !== p.lane) { p.lane = l; sfx.swish(); } }
+  function move(d) { if (R.state !== 'run') return; const p = R.p, l = clamp(p.lane + d, 0, 2); if (l !== p.lane) { p.lane = l; sfx.swish(d); } }
   function die(e) { R.state = 'dead'; R.cause = e.k === 'wall' ? 'tall' : e.k; R.deadT = 0; R.p.vy = 520; R.p.on = false; R.shake = 0.5; sfx.hit(); env.setHot(false); const [x, y] = P(R.p.x, R.p.y + 30, ZP); puff(x, y, 18, ['#fff', '#ffd83d', '#ff6b6b'], 340, 6, 0.6); }
   function smash(e, pts) { e.dead = true; const [x, y] = here(e); puff(x, y, 14, e.k === 'worm' ? [PAL[2].main, PAL[2].light, '#fff'] : ['#c98d4f', '#fff', '#ffd43b', '#868e96'], 380, 6, 0.6); if (pts) { R.bonus += pts; float('+' + pts, '#ffe45c', 22); } }
 
@@ -127,7 +128,7 @@ export function createRun3D(env) {
     }
     const rush = R.pw.rush > 0; R.speed = speedAt(R.z) * (rush ? 1.4 : 1); R.z += R.speed * dt;
     const zi = Math.floor(R.z / ZLEN);
-    if (zi !== R.zi) { R.prevZ = R.zi % NZ; R.zi = zi; R.fade = 0; const z = ZONES[zi % NZ]; sfx.zone(); env.banner(z.name, zi % NZ === 0 ? `Lap ${Math.floor(zi / NZ) + 1} — faster!` : z.sub); R.bonus += 50 * zi; float('ZONE BONUS +' + 50 * zi, '#69db7c', 22, 40); env.setTempo(172 + Math.min(18, zi * 2)); }
+    if (zi !== R.zi) { R.prevZ = R.zi % NZ; R.zi = zi; R.fade = 0; const z = ZONES[zi % NZ]; sfx.zone(); env.banner(z.name, zi % NZ === 0 ? `Lap ${Math.floor(zi / NZ) + 1} — faster!` : z.sub); R.bonus += 50 * zi; float('ZONE BONUS +' + 50 * zi, '#69db7c', 22, 40); env.setTempo(172 + Math.min(18, zi * 2)); setZone(zi % NZ); }
     if (score() >= R.mile * 500) { float(R.mile * 500 + '!', '#fff', 30, 70); R.mile++; env.bump($('score')); }
     const best = save.bestDist3 || 0; if (!R.record && best > 20 && R.z / M > best) { R.record = true; float('NEW RECORD!', '#ff6b6b', 30, 90); puff(W / 2, H * 0.4, 30, ['#ff6b6b', '#ffd43b', '#69db7c', '#74c0fc', '#fff'], 420, 6, 1.1); sfx.best(); }
     gen();

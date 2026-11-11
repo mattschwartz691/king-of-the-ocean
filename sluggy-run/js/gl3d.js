@@ -82,7 +82,7 @@ export function createGL(canvas, env) {
   const ringTex = new Map();
   function ringMap(zi) { let t = ringTex.get(zi); if (!t) { const a = env.tile(zi, 0), b = env.tile(zi, 1), c = document.createElement('canvas'); c.width = 1024; c.height = 512; const g = c.getContext('2d'); g.globalAlpha = 0.9; g.drawImage(a, 0, 0, 1024, 512); g.globalAlpha = 1; g.drawImage(b, 0, 0, 1024, 512); t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.repeat.set(5, 1); ringTex.set(zi, t); } return t; }
   // extras that live in the sky
-  const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(Array.from({ length: 900 }, (_, i) => { const a = hash(i) * TAU, e = hash(i + 0.5) * 1.3, r = 6000; return [Math.cos(a) * Math.cos(e) * r, Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r]; }).flat(), 3)), new THREE.PointsMaterial({ color: '#ffffff', size: 3, sizeAttenuation: false, fog: false, transparent: true })); scene.add(stars);
+  const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(Array.from({ length: 900 }, (_, i) => { const a = hash(i) * TAU, e = hash(i + 0.5) * 1.3, r = 6000; return [Math.cos(a) * Math.cos(e) * r, Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r]; }).flat(), 3)), new THREE.PointsMaterial({ color: '#ffffff', size: 2, sizeAttenuation: false, fog: false, transparent: true })); scene.add(stars);
   const earth = grp(mk(GEO.sph, new THREE.MeshLambertMaterial({ fog: false, map: tex(256, 128, (g) => { g.fillStyle = '#2f7fe0'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#4fbf6a'; for (let i = 0; i < 14; i++) { g.beginPath(); g.ellipse(hash(i) * 256, 20 + hash(i + 3) * 90, 14 + hash(i + 5) * 22, 8 + hash(i + 7) * 14, hash(i) * 3, 0, TAU); g.fill(); } g.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 10; i++) { g.beginPath(); g.ellipse(hash(i + 20) * 256, hash(i + 23) * 128, 26, 5, 0, 0, TAU); g.fill(); } }) }), 0, 0, 0, 420, 420, 420, false)); scene.add(earth);
   const sunDisc = mk(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: '#fff3b0', fog: false, depthWrite: false }), 0, 0, 0, 520, 520, 1, false); sunDisc.renderOrder = -8; scene.add(sunDisc);
 
@@ -115,7 +115,7 @@ export function createGL(canvas, env) {
   // ------------------------------------------------------------ roadside scenery (prototypes are cloned into chunks)
   const protos = new Map();
   const proto = (key, build) => { let p = protos.get(key); if (!p) { p = nocast(build()); protos.set(key, p); } return p.clone(); };
-  const barkTex = tex(128, 256, (g, w, h) => { g.fillStyle = '#9a5230'; g.fillRect(0, 0, w, h); for (let i = 0; i < 90; i++) { g.fillStyle = ['#7a3c1e', '#b4683c', '#6a3318'][i % 3]; g.fillRect(hash(i) * w, hash(i + 4) * h, 3 + hash(i + 2) * 4, 30 + hash(i + 8) * 70); } }, [2, 3]);
+  const barkTex = tex(128, 256, (g, w, h) => { g.fillStyle = '#9a5230'; g.fillRect(0, 0, w, h); for (let i = 0; i < 90; i++) { g.fillStyle = ['#7a3c1e', '#b4683c', '#6a3318'][i % 3]; g.fillRect(hash(i) * w, hash(i + 4) * h, 3 + hash(i + 2) * 4, 30 + hash(i + 8) * 70); } }, [2, 14]);
   const winTex = [['#7f8fd0', '#ffe9a8'], ['#9a86c9', '#ffe9a8'], ['#6f9bc8', '#fff3c4'], ['#c98fa8', '#ffe9a8']].map(([c, lit], k) => tex(128, 256, (g, w, h) => { g.fillStyle = c; g.fillRect(0, 0, w, h); for (let y = 10; y < h - 8; y += 32) for (let x = 10; x < w - 12; x += 30) { g.fillStyle = hash(x * 7 + y * 3 + k) < 0.35 ? lit : 'rgba(20,30,90,.45)'; g.fillRect(x, y, 18, 22); } }, [2, 3]));
   const winMat = winTex.map((t) => texMat(t));
   const officeWall = texMat(tex(256, 256, (g, w, h) => { g.fillStyle = '#efe4cc'; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.fillRect(28, 30, 200, 150); const gr = g.createLinearGradient(0, 36, 0, 174); gr.addColorStop(0, '#6db9f2'); gr.addColorStop(1, '#d3ecff'); g.fillStyle = gr; g.fillRect(34, 36, 188, 138); g.fillStyle = 'rgba(90,120,190,.55)'; for (let i = 0; i < 6; i++) g.fillRect(40 + i * 30, 100 + hash(i) * 40, 24, 80 - hash(i) * 40 + 0); g.fillStyle = '#fff'; g.fillRect(125, 36, 6, 138); g.fillRect(34, 102, 188, 6); g.fillStyle = '#b9a67f'; g.fillRect(0, 236, w, 20); }, [2, 1]));
@@ -124,7 +124,7 @@ export function createGL(canvas, env) {
   const crateTex = tex(128, 128, (g, w, h) => { g.fillStyle = '#c98d4f'; g.fillRect(0, 0, w, h); g.strokeStyle = '#8a5a2a'; g.lineWidth = 10; g.strokeRect(5, 5, w - 10, h - 10); g.beginPath(); g.moveTo(8, 8); g.lineTo(w - 8, h - 8); g.stroke(); g.fillStyle = '#f6e3c0'; g.fillRect(14, 46, 100, 36); g.fillStyle = '#a01d4c'; g.font = '900 22px ui-rounded, system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('WORMCO', 64, 65); });
   const crateMat = texMat(crateTex);
   const stripeTex = (a, b) => tex(128, 32, (g, w, h) => { for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? a : b; g.fillRect(i * 16, 0, 16, h); } });
-  function palmTree(h) { const t = mat('#8a6a4a'), l = mat('#3f9a4d'), g = grp(); let x = 0; for (let i = 0; i < 5; i++) { const s = C(9 - i, 10 - i, h / 5 + 2, t, x, (i * h) / 5, 0); s.rotation.z = -0.08 * i; g.add(s); x += Math.sin(0.08 * i) * (h / 5); } for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU, leaf = mk(GEO.sph, i % 2 ? l : mat('#57b862'), x + Math.cos(a) * 46, h - 8, Math.sin(a) * 46, 52, 4, 13); leaf.rotation.set(0, -a, -0.45); g.add(leaf); } g.add(S(mat('#6a4a2a'), x, h, 0, 9)); return g; }
+  function palmTree(h) { const t = mat('#8a6a4a'), l = mat('#3f9a4d'), g = grp(); let x = 0; for (let i = 0; i < 5; i++) { const s = C(9 - i, 10 - i, h / 5 + 2, t, x, (i * h) / 5, 0); s.rotation.z = -0.08 * i; g.add(s); x += Math.sin(0.08 * i) * (h / 5); } for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU, leaf = mk(GEO.lo, i % 2 ? l : mat('#57b862'), x + Math.cos(a) * 46, h - 8, Math.sin(a) * 46, 52, 4, 13); leaf.rotation.set(0, -a, -0.45); g.add(leaf); } g.add(S(mat('#6a4a2a'), x, h, 0, 9)); return g; }
   function shroomGlow(c) { const cap = glow(c, 1.3), st = mat('#e9f7f3'), g = grp(); for (const [x, z, hh, r] of [[-18, 6, 34, 16], [8, -6, 60, 24], [30, 10, 26, 13]]) { g.add(C(3.5, 4.5, hh, st, x, 0, z)); const d = mk(GEO.dome, cap, x, hh - 2, z, r, r * 0.7, r); g.add(d); } const halo = mk(GEO.plane, new THREE.MeshBasicMaterial({ map: haloTex, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), 6, 40, 16, 220, 160, 1); bendy(halo.material); g.add(halo); return g; }
   const haloTex = tex(64, 64, (g) => { const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,.7)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); });
   const haloMat = (c, o = 1) => bendy(new THREE.MeshBasicMaterial({ map: haloTex, color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -137,7 +137,7 @@ export function createGL(canvas, env) {
       const q = side < 0 ? 0 : 50;
       if (zi === 0) {
         for (let i = 0; i < 4; i++) { const rad = 26 + r(q + i) * 34, x = side * (ROAD + 70 + r(q + i + 10) * 520 + i * 60); put(proto('redwood', () => grp(C(1, 1, 1400, texMat(barkTex)), C(1, 1.9, 90, mat('#8a4a2a')), S(mat('#4f9a3a'), 0, 4, 0, 1.6, 0.12, 1.6))), x, (i - 1.5) * 130 + r(q + i + 20) * 60, 1).scale.set(rad, 1, rad); }
-        for (let i = 0; i < 3; i++) put(proto('fern', () => { const g = grp(), m = mat('#3c9a3c'), m2 = mat('#57b548'); for (let k = 0; k < 7; k++) { const a = (k / 7) * TAU, l = mk(GEO.sph, k % 2 ? m : m2, Math.cos(a) * 20, 14, Math.sin(a) * 20, 26, 2.5, 7); l.rotation.set(0, -a, 0.5); g.add(l); } return g; }), side * (ROAD + 26 + r(q + i + 30) * 150), (i - 1) * 170 + r(q + i + 33) * 80, 0.9 + r(q + i + 36) * 0.9);
+        for (let i = 0; i < 3; i++) put(proto('fern', () => { const g = grp(), m = mat('#3c9a3c'), m2 = mat('#57b548'); for (let k = 0; k < 7; k++) { const a = (k / 7) * TAU, l = mk(GEO.lo, k % 2 ? m : m2, Math.cos(a) * 20, 14, Math.sin(a) * 20, 26, 2.5, 7); l.rotation.set(0, -a, 0.5); g.add(l); } return g; }), side * (ROAD + 26 + r(q + i + 30) * 150), (i - 1) * 170 + r(q + i + 33) * 80, 0.9 + r(q + i + 36) * 0.9);
         if (r(q + 40) < 0.6) put(proto('shroom', () => grp(C(5, 7, 26, mat('#f3e9d2')), mk(GEO.dome, mat('#e8590c'), 0, 22, 0, 24, 16, 24), S(mat('#fff'), -9, 33, 9, 4), S(mat('#fff'), 8, 34, -4, 3.4))), side * (ROAD + 30 + r(q + 41) * 90), r(q + 42) * 400 - 200, 0.8 + r(q + 43));
         if (r(q + 44) < 0.5) put(proto('bush', () => grp(S(mat('#2f7340'), 0, 22, 0, 40, 26, 34, GEO.ico1), S(mat('#3f8a45'), 26, 16, 10, 26, 18, 24, GEO.ico1))), side * (ROAD + 60 + r(q + 45) * 200), r(q + 46) * 400 - 200);
       } else if (zi === 1) {
@@ -167,12 +167,14 @@ export function createGL(canvas, env) {
       } else {
         for (let i = 0; i < 3; i++) { const s = 20 + r(q + i) * 50; put(S(mat(i % 2 ? '#9a9fb6' : '#7b8099', { flatShading: true }), 0, s * 0.5, 0, s, s * 0.8, s * 0.9, GEO.ico), side * (ROAD + 50 + r(q + i + 5) * 420), r(q + i + 9) * 480 - 240, 1, r(q + i) * 6); }
         if (r(q + 20) < 0.6) put(proto('crater', () => rot(mk(new THREE.TorusGeometry(1, 0.22, 8, 22), mat('#7d8299'), 0, 3, 0, 60, 60, 26, false), PI / 2)), side * (ROAD + 120 + r(q + 21) * 300), r(q + 22) * 400 - 200, 0.6 + r(q + 23) * 1.2);
-        if (r(q + 24) < 0.25) put(proto('flag', () => grp(C(2, 2, 170, mat('#dee2e6')), board(signTex([['BIDNESS', '#3b2414', 50]], '#ffd43b', '#3b2414', 256, 128), 100, 56, 52, 112, 0))), side * (ROAD + 70), 0);
+        if (r(q + 24) < 0.1) put(proto('flag', () => grp(C(2, 2, 170, mat('#dee2e6')), board(signTex([['BIDNESS', '#3b2414', 50]], '#ffd43b', '#3b2414', 256, 128), 100, 56, 52, 112, 0))), side * (ROAD + 70), 0);
       }
     }
+    // a welcome arch where each new zone begins
+    { const zb = Math.round((idx * CH + CH / 2) / env.ZLEN) * env.ZLEN, lz = zb - idx * CH - CH / 2; if (zb > 0 && Math.abs(lz) <= CH / 2) { const nz = ((Math.floor((zb + 1) / env.ZLEN) % NZ) + NZ) % NZ, pm = mat('#3b2414'); const a = grp(B(16, 250, 16, pm, -(ROAD + 16), 0, 0), B(16, 250, 16, pm, ROAD + 16, 0, 0), board(signTex([[ZONES[nz].name.toUpperCase(), '#ffe45c', ZONES[nz].name.length > 12 ? 44 : 58]], '#3b2414', '#ffe45c', 512, 128, '#ffd43b'), ROAD * 2 + 60, 70, 0, 205, 0, true)); a.position.z = -lz; holder.add(a); } }
     // things that span the road
     if (zi === 2) { put(mk(GEO.plane, mat('#f4ead6'), 0, 420, 0, 1100, CH, 1, false), 0, 0).rotation.x = PI / 2; for (const z of [-130, 130]) put(B(300, 6, 60, glow('#fffbe6', 1.1), 0, 410, 0), 0, z); }
-    if (zi === 3 && idx % 2 === 0) { const cols = ['#fff3b0', '#ffa8a8', '#99e9f2']; for (let k = 0; k < 9; k++) { const u = k / 8; put(S(glow(cols[k % 3], 1.4), 0, 0, 0, 6), (u - 0.5) * (ROAD * 2 + 60), 0).position.y = 190 - Math.sin(u * PI) * 36; } for (const s of [-1, 1]) put(C(3, 4, 190, mat('#6a4a6f')), s * (ROAD + 30), 0); }
+    if (zi === 3 && idx % 2 === 0) { const cols = ['#fff3b0', '#ffa8a8', '#99e9f2']; for (let k = 0; k < 9; k++) { const u = k / 8; put(S(glow(cols[k % 3], 1.4), 0, 0, 0, 4.5, 4.5, 4.5, GEO.lo), (u - 0.5) * (ROAD * 2 + 60), 0).position.y = 290 - Math.sin(u * PI) * 40; } for (const s of [-1, 1]) put(C(3, 4, 290, mat('#6a4a6f')), s * (ROAD + 30), 0); }
     if (zi === 4 && idx % 2 === 0) { put(B(ROAD * 2 + 230, 10, 10, glow('#3df5a0', 1.2), 0, 330, 0), 0, 0); }
     if (zi === 5) { put(mk(GEO.plane, texMat(rockTex), 0, 430, 0, 620, CH, 1, false), 0, 0).rotation.x = PI / 2; put(B(ROAD * 2 + 110, 24, 24, mat('#8a5a30'), 0, 320, 0), 0, -CH / 2 + 10); put(grp(B(3, 30, 3, mat('#3b2414'), 0, 290, 0), B(18, 26, 18, glow('#ffd43b', 1.6), 0, 264, 0), mk(GEO.plane, haloMat('#ffcf66', 0.8), 0, 276, 10, 260, 260, 1, false)), (idx % 2 ? 60 : -60), -CH / 2 + 10); }
   }
@@ -185,15 +187,17 @@ export function createGL(canvas, env) {
 
   // ------------------------------------------------------------ Sluggy
   const slug = (() => {
-    const Y = phong('#ffd83d', 90), D = phong('#e3ac00', 60), Wt = phong('#ffffff', 140), Kk = mat('#2a1a0c'), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-    body.add(S(Y, 0, 22, 4, 30, 22, 50), S(Y, 0, 30, -34, 25, 25, 28), S(Y, 0, 13, 48, 20, 13, 30), S(Y, 0, 8, 72, 10, 8, 18), S(D, 0, 32, -2, 24.5, 16, 30));
+    const Y = phong('#ffd83d', 90, { emissive: '#8a6200', emissiveIntensity: 0.45 }), D = phong('#f0bb14', 70, { emissive: '#7a5200', emissiveIntensity: 0.4 }), Wt = phong('#ffffff', 140), Kk = mat('#2a1a0c'), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+    const prof = [[0, 84], [5, 79], [11, 68], [18, 50], [25, 26], [29, 2], [29, -20], [25, -40], [17, -54], [8, -61], [0, -63]].map(([r, z]) => new THREE.Vector2(r, z));
+    const hull = new THREE.Mesh(new THREE.LatheGeometry(prof, 22).rotateX(-PI / 2), Y); hull.scale.set(1.05, 0.74, 1); hull.position.set(0, 21.5, 0); hull.castShadow = true;
+    body.add(hull, S(Y, 0, 31, -36, 24, 24, 26), S(D, 0, 33, 0, 22, 9.5, 30));
     for (const [x, y, z, s] of [[-20, 30, 26, 4.5], [18, 34, 36, 4], [-8, 27, 52, 3.5], [22, 36, 8, 3.2], [-23, 36, 0, 3], [6, 18, 70, 2.6]]) body.add(S(D, x, y, z, s, s * 0.6, s));
     body.add(S(mat('#ff9aa0'), -15, 27, -55, 5, 3.4, 2.4), S(mat('#ff9aa0'), 15, 27, -55, 5, 3.4, 2.4));
     const smile = mk(new THREE.TorusGeometry(8, 1.7, 6, 14, PI), Kk, 0, 27, -60.5, 1, 1, 1, false); smile.rotation.z = PI; body.add(smile);
     const stalks = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(s * 12, 46, -38); p.rotation.set(-0.18, 0, -s * 0.24); p.add(C(3, 3.8, 38, Y), S(Wt, 0, 44, 0, 10), S(Kk, 0, 45, -7.6, 4.8), S(Wt, 1.5, 47.5, -11, 1.6)); body.add(p); return p; });
-    const tie = new THREE.Group(); tie.position.set(15, 40, -20); tie.add(B(10, 2.5, 34, phong('#e03131', 30), 0, 0, 17), B(12, 4, 9, phong('#c92a2a', 30), 0, -1, 0)); body.add(tie);
+    const tie = new THREE.Group(); tie.position.set(15, 40, -20); tie.add(B(10, 2.5, 34, mat('#e03131', { emissive: '#5a0c0c' }), 0, 0, 17), B(12, 4, 9, mat('#c92a2a'), 0, -1, 0)); body.add(tie);
     const hat = new THREE.Group(); hat.position.set(0, 53, -36); hat.rotation.x = -0.12; body.add(hat);
-    const shield = mk(GEO.sph, new THREE.MeshPhongMaterial({ color: '#69db7c', transparent: true, opacity: 0.28, shininess: 120, specular: '#ffffff', depthWrite: false }), 0, 34, 10, 62, 58, 84, false); root.add(shield);
+    const shield = mk(GEO.sph, new THREE.MeshPhongMaterial({ color: '#69db7c', transparent: true, opacity: 0.16, shininess: 140, specular: '#ffffff', depthWrite: false }), 0, 34, 10, 62, 58, 84, false); root.add(shield);
     const magnet = mk(GEO.plane, new THREE.MeshBasicMaterial({ map: iconTex('magnet'), transparent: true, depthWrite: false }), 0, 124, -30, 44, 44, 1, false); root.add(magnet);
     scene.add(root); return { root, body, stalks, tie, hat, shield, magnet, hatId: null, prop: null };
   })();
@@ -211,7 +215,7 @@ export function createGL(canvas, env) {
   // slime trail ribbon
   const TRN = 40, trailGeo = new THREE.BufferGeometry(); trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRN * 6), 3));
   { const ix = []; for (let i = 0; i < TRN - 1; i++) ix.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2); trailGeo.setIndex(ix); }
-  const trail = new THREE.Mesh(trailGeo, bendy(new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide }))); trail.frustumCulled = false; scene.add(trail);
+  const trail = new THREE.Mesh(trailGeo, bendy(new THREE.MeshBasicMaterial({ color: '#fff6c0', transparent: true, opacity: 0.17, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }))); trail.frustumCulled = false; scene.add(trail);
 
   // ------------------------------------------------------------ coins (instanced) + entity models
   const coinFace = tex(128, 128, (g) => { g.fillStyle = '#ffcf33'; g.fillRect(0, 0, 128, 128); g.strokeStyle = '#e8a100'; g.lineWidth = 10; g.beginPath(); g.arc(64, 64, 50, 0, TAU); g.stroke(); g.fillStyle = '#c98500'; g.font = '900 78px ui-rounded, system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$', 64, 68); });
@@ -304,7 +308,7 @@ export function createGL(canvas, env) {
     s.shield.visible = R.pw.shield; s.shield.scale.set(62 + Math.sin(t * 6) * 2, 58, 84); s.magnet.visible = R.pw.magnet > 0; s.magnet.position.y = 124 + Math.sin(t * 5) * 5; s.root.visible = !(R.inv > 0 && R.pw.rush <= 0 && Math.sin(t * 40) > 0);
     s.root.traverse((c) => { if (c.isMesh && c !== s.shield && c !== s.magnet) c.castShadow = true; });
     // slime trail
-    { const pos = trailGeo.attributes.position, n = R.trail.length; let last = null; for (let i = 0; i < TRN; i++) { const q = R.trail[n - TRN + i] || null, a = q || last; const x = a ? a.x : p.x, z = a ? -(a.z - R.z) + 62 : 62, w = q ? 12 : 0; pos.setXYZ(i * 2, x - w, 0.8, z); pos.setXYZ(i * 2 + 1, x + w, 0.8, z); if (q) last = q; } pos.needsUpdate = true; trail.visible = !dead; }
+    { const pos = trailGeo.attributes.position, n = R.trail.length; let last = null; for (let i = 0; i < TRN; i++) { const q = R.trail[n - TRN + i] || null, a = q || last; const x = a ? a.x : p.x, z = a ? -(a.z - R.z) + 62 : 62, w = q ? 8 : 0; pos.setXYZ(i * 2, x - w, 0.8, z); pos.setXYZ(i * 2 + 1, x + w, 0.8, z); if (q) last = q; } pos.needsUpdate = true; trail.visible = !dead; }
     // entities
     let nc = 0; const seen = new Set();
     for (const e of R.ents) {
@@ -320,11 +324,11 @@ export function createGL(canvas, env) {
     coins.count = nc; coins.instanceMatrix.needsUpdate = true;
     for (const [e, m] of live) if (!seen.has(e)) { scene.remove(m); live.delete(e); }
     // camera: sweeps round from Sluggy's face at the start, then chases
-    const portrait = W < H, dist = portrait ? 335 : 265, hgt = portrait ? 205 : 128, intro = clamp(1 - t / 1.7, 0, 1), ang = intro * intro * (3 - 2 * intro) * 2.75;
+    const portrait = W < H, dist = portrait ? 335 : 265, hgt = portrait ? 196 : 128, intro = clamp(1 - t / 1.7, 0, 1), ang = intro * intro * (3 - 2 * intro) * 2.75;
     const shake = R.shake > 0 ? R.shake * 22 : 0, cx = R.camX * 1.0;
     camPos.set(cx + Math.sin(ang) * dist * (1 - intro * 0.35), hgt * (1 - intro * 0.55) + (dead ? R.deadT * 40 : 0), Math.cos(ang) * dist * (1 - intro * 0.35) + (dead ? R.deadT * 60 : 0));
     camera.position.set(camPos.x + (Math.random() - 0.5) * shake, camPos.y + (Math.random() - 0.5) * shake, camPos.z);
-    look.set(lerp(cx * 0.9, p.x, intro), lerp(62, 40, intro), lerp(-250, -10, intro)); camera.lookAt(look); camera.rotation.z += -p.lean * 0.05 + R.bend * 0.05;
+    look.set(lerp(cx * 0.9, p.x, intro), lerp(portrait ? 84 : 62, 40, intro), lerp(-250, -10, intro)); camera.lookAt(look); camera.rotation.z += -p.lean * 0.05 + R.bend * 0.05;
     const baseFov = clamp((2 * Math.atan(0.46 / camera.aspect) * 180) / PI, 46, 82), want = baseFov + (R.pw.rush > 0 ? 13 : 0) + clamp((R.speed - 540) / 520, 0, 1) * 5;
     fov = lerp(fov, want, Math.min(1, dt * 5 + (intro > 0 ? 1 : 0))); if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
     sky.position.copy(camera.position);
