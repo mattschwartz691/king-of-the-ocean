@@ -1,7 +1,7 @@
 // Sluggy Run — endless runner starring Sluggy the banana slug.
 import { drawSlug, drawCoin, PAL, OUT } from '../../sluggy/js/art.js';
 import { ZONES, TW, TH, buildLayer, drawSkyFx, drawGround, drawObstacle, drawSalt, drawLedge, drawWorm, drawPower, drawHat, HATS, POWERS } from './zones.js';
-import { initAudio, sfx, startMusic, setMuted, setHot, setTempo, setTrack, suspendAudio } from './audio.js';
+import { initAudio, sfx, startMusic, setMuted, setHot, setTempo, setTrack, setZone, restartSong, suspendAudio } from './audio.js';
 import { createRun3D } from './run3d.js';
 
 const $ = (id) => document.getElementById(id);
@@ -124,7 +124,7 @@ const moonNow = () => G.zi % NZ === 6;
 const pick = (a) => a[(rnd() * a.length) | 0];
 function press() {
   if (G.state !== 'run') return; const p = G.p, px = G.camX + PX; if (p.hold) return; p.hold = true;
-  if (p.ceil) { unstick(-380); sfx.swish(); float(px, p.y + 70, pick(['Bloop!', 'Unstuck!', 'Plop!']), '#fff4b0', 18); }
+  if (p.ceil) { unstick(-380); sfx.unstick(); float(px, p.y + 70, pick(['Bloop!', 'Unstuck!', 'Plop!']), '#fff4b0', 18); }
   else if (!p.on) { p.vy = Math.min(p.vy, -1100); p.slam = true; if (p.y < 60) p.tapBuf = 0.14; sfx.slide(); }
   else { p.charge = 0; (sfx.squish || sfx.slide)(); }
 }
@@ -134,7 +134,7 @@ function boing() {
   p.vy = lerp(VMIN, VMAX, c) * (moonNow() ? 0.85 : 1) * (perfect ? 1.03 : 1); p.on = false; p.plat = null; p.charge = 0; p.sq = 0.7 + c * 1.3; p.slam = false;
   if (c > 0.55) (sfx.boing || sfx.jump2)(c); else sfx.jump();
   puff(px - 6, p.y + 4, 4 + Math.round(c * 9), c > 0.55 ? ['#fff4b0', '#ffd83d', '#fff'] : 'rgba(255,255,255,.7)', { up: true, sp: 90 + c * 170, r: 5, life: 0.4 });
-  if (perfect) { G.streak++; const pts = 10 * Math.min(5, G.streak); G.bonus += pts; float(px + 20, p.y + 96, (G.streak > 1 ? `PERFECT BOING x${G.streak}  +` : 'PERFECT BOING!  +') + pts, '#69db7c', 22 + Math.min(8, G.streak * 2)); bump($('score')); }
+  if (perfect) { sfx.sparkle(); G.streak++; const pts = 10 * Math.min(5, G.streak); G.bonus += pts; float(px + 20, p.y + 96, (G.streak > 1 ? `PERFECT BOING x${G.streak}  +` : 'PERFECT BOING!  +') + pts, '#69db7c', 22 + Math.min(8, G.streak * 2)); bump($('score')); }
   else { if (c >= 0.5) G.streak = 0; if (c >= 1) float(px + 10, p.y + 90, pick(['BOING!', 'BOI-OI-OING!', 'Sproing!']), '#ffe45c', 22); }
 }
 function land(plat) {
@@ -192,7 +192,7 @@ function step(dt) {
     const lap = Math.floor(zi / NZ); banner(z.name, zi % NZ === 0 ? `Lap ${lap + 1} — faster!` : z.sub);
     G.bonus += 50 * zi; float(px + 60, 150, 'ZONE BONUS +' + 50 * zi, '#69db7c', 22);
     for (const k of [...tiles.keys()]) { const kz = Math.floor(k / 3); if (kz !== zi % NZ && kz !== G.prevZ) tiles.delete(k); }
-    setTempo(148 + Math.min(24, zi * 3));
+    setTempo(148 + Math.min(24, zi * 3)); setZone(zi % NZ);
   }
   if (score() >= G.mile * 500) { float(px + 80, 190, G.mile * 500 + '!', '#fff', 30); G.mile++; bump($('score')); }
   if (!G.record && save.bestDist > 20 && G.camX / M > save.bestDist) { G.record = true; float(px + 40, 170, 'NEW RECORD!', '#ff6b6b', 30); puff(px, 120, 30, CONF, { sp: 380, r: 6, life: 1.1, g: 500 }); sfx.best(); }
@@ -214,7 +214,7 @@ function step(dt) {
     }
     if (!p.on && !p.ceil && p.y <= 0) { p.y = 0; land(null); }
   } else if (p.plat && px > p.plat.x + p.plat.w + 14) { p.on = false; p.plat = null; }
-  else if (p.hold) { const was = p.charge; p.charge += dt; if (was < CHARGE && p.charge >= CHARGE) { sfx.tick(14); puff(px, p.y + 12, 8, ['#69db7c', '#d3f9d8', '#fff'], { sp: 150, r: 4, life: 0.35, g: 0 }); } }
+  else if (p.hold) { const was = p.charge; p.charge += dt; if (was < CHARGE && p.charge >= CHARGE) { sfx.ding(); puff(px, p.y + 12, 8, ['#69db7c', '#d3f9d8', '#fff'], { sp: 150, r: 4, life: 0.35, g: 0 }); } }
   const squished = p.on && p.hold && p.charge > 0.05;
   // slime trail
   const tr = G.trail, lastT = tr[tr.length - 1];
@@ -406,7 +406,7 @@ function refreshTitle() {
 }
 function startRun() {
   const is3 = save.mode === '3d';
-  initAudio(); setMuted(save.muted); setHot(false); setTrack(is3 ? 'chase' : 'bounce'); setTempo(is3 ? 172 : 148); startMusic(); sfx.click();
+  initAudio(); setMuted(save.muted); setHot(false); setTrack(is3 ? 'chase' : 'bounce'); setTempo(is3 ? 172 : 148); setZone(0); restartSong(); startMusic(); sfx.click();
   paused = false; overId++; show(null); $('coins').textContent = '0'; draw.s = draw.d = -1;
   const z = ZONES[0]; banner(z.name, z.sub);
   const key = is3 ? 'runs3' : 'runs', h = $(is3 ? 'hint3' : 'hint'); $('hint').classList.add('hidden'); $('hint3').classList.add('hidden');

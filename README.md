@@ -18,13 +18,15 @@ Sluggy is a banana slug who is really into business (he pronounces it "bidness")
 - **Solo:** take down the five bosses of WormCo. **1v1:** slug vs slug on two phones (host shows a code/QR).
 
 ## Sluggy Run (`/sluggy-run`)
-An endless runner: Sluggy is late for bidness. Tap the right side to jump (tap again to double jump), hold the left side to slide, and slam down on worms to stomp them. Never touch the salt.
-Two ways to play, chosen on the start screen: **Side View** (the side-scroller above) or **3D Chase**, a behind-the-slug three-lane runner where you swipe left/right to change lanes, up to jump and down to slide.
-Seven environments loop and speed up: Redwood Forest, Downtown, The Office, The Boardwalk, Stock Market, Worm Tunnels and The Moon (low gravity).
-Power-ups (magnet, slime shield, espresso rush, double coins), stomp combos, and coins you bank to buy Sluggy hats.
+Sluggy is late for bidness. Two endless runners in one, chosen on the start screen:
+
+- **Side View — Squish, Boing & Splat.** One finger: hold to squish Sluggy flat (he slips under things and charges up), release to boing — a tap is a hop, a full charge is a huge leap, and letting go right as the ring fills is a Perfect Boing. Tap in mid-air to splat straight down onto worms. Boing up into a slime ledge and he sticks and crawls along it upside down.
+- **3D Chase.** A behind-the-slug, three-lane runner rendered in WebGL (three.js): swipe left/right to change lanes, up to jump, down to slide.
+
+Both run through seven looping environments (Redwood Forest, Downtown, The Office, The Boardwalk, Stock Market, Worm Tunnels, The Moon), with power-ups, stomp combos, and coins that buy Sluggy hats.
 
 ## Tech
-Zero-build static site: vanilla JS modules + Canvas 2D; all art and audio are generated in code.
+Zero-build static site: vanilla JS modules + Canvas 2D (plus a vendored [three.js](https://threejs.org) for Sluggy Run's 3D mode); all art, 3D models and audio are generated in code.
 Multiplayer is peer-to-peer WebRTC via [PeerJS](https://peerjs.com) (its public broker is used only for the handshake).
 
 Run locally: `python3 -m http.server` and open `http://localhost:8000`.

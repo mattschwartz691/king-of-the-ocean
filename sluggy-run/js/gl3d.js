@@ -187,15 +187,15 @@ export function createGL(canvas, env) {
 
   // ------------------------------------------------------------ Sluggy
   const slug = (() => {
-    const Y = phong('#ffd83d', 90, { emissive: '#8a6200', emissiveIntensity: 0.45 }), D = phong('#f0bb14', 70, { emissive: '#7a5200', emissiveIntensity: 0.4 }), Wt = phong('#ffffff', 140), Kk = mat('#2a1a0c'), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+    const Y = phong('#ffd83d', 90, { emissive: '#8a6200', emissiveIntensity: 0.45 }), D = phong('#f0bb14', 70, { emissive: '#7a5200', emissiveIntensity: 0.4 }), Wt = phong('#ffffff', 140, { emissive: '#8a8a8a', emissiveIntensity: 0.6 }), Kk = mat('#2a1a0c'), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
     const prof = [[0, 84], [5, 79], [11, 68], [18, 50], [25, 26], [29, 2], [29, -20], [25, -40], [17, -54], [8, -61], [0, -63]].map(([r, z]) => new THREE.Vector2(r, z));
-    const hull = new THREE.Mesh(new THREE.LatheGeometry(prof, 22).rotateX(-PI / 2), Y); hull.scale.set(1.05, 0.74, 1); hull.position.set(0, 21.5, 0); hull.castShadow = true;
+    const hull = new THREE.Mesh(new THREE.LatheGeometry(prof, 22).rotateX(-PI / 2), Y); hull.scale.set(0.98, 0.88, 1); hull.position.set(0, 25, 0); hull.castShadow = true;
     body.add(hull, S(Y, 0, 31, -36, 24, 24, 26), S(D, 0, 33, 0, 22, 9.5, 30));
     for (const [x, y, z, s] of [[-20, 30, 26, 4.5], [18, 34, 36, 4], [-8, 27, 52, 3.5], [22, 36, 8, 3.2], [-23, 36, 0, 3], [6, 18, 70, 2.6]]) body.add(S(D, x, y, z, s, s * 0.6, s));
     body.add(S(mat('#ff9aa0'), -15, 27, -55, 5, 3.4, 2.4), S(mat('#ff9aa0'), 15, 27, -55, 5, 3.4, 2.4));
     const smile = mk(new THREE.TorusGeometry(8, 1.7, 6, 14, PI), Kk, 0, 27, -60.5, 1, 1, 1, false); smile.rotation.z = PI; body.add(smile);
     const stalks = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(s * 12, 46, -38); p.rotation.set(-0.18, 0, -s * 0.24); p.add(C(3, 3.8, 38, Y), S(Wt, 0, 44, 0, 10), S(Kk, 0, 45, -7.6, 4.8), S(Wt, 1.5, 47.5, -11, 1.6)); body.add(p); return p; });
-    const tie = new THREE.Group(); tie.position.set(15, 40, -20); tie.add(B(10, 2.5, 34, mat('#e03131', { emissive: '#5a0c0c' }), 0, 0, 17), B(12, 4, 9, mat('#c92a2a'), 0, -1, 0)); body.add(tie);
+    const tie = new THREE.Group(); tie.position.set(15, 40, -20); tie.add(B(13, 2.5, 36, mat('#e03131', { emissive: '#5a0c0c' }), 0, 0, 17), B(12, 4, 9, mat('#c92a2a'), 0, -1, 0)); body.add(tie);
     const hat = new THREE.Group(); hat.position.set(0, 53, -36); hat.rotation.x = -0.12; body.add(hat);
     const shield = mk(GEO.sph, new THREE.MeshPhongMaterial({ color: '#69db7c', transparent: true, opacity: 0.16, shininess: 140, specular: '#ffffff', depthWrite: false }), 0, 34, 10, 62, 58, 84, false); root.add(shield);
     const magnet = mk(GEO.plane, new THREE.MeshBasicMaterial({ map: iconTex('magnet'), transparent: true, depthWrite: false }), 0, 124, -30, 44, 44, 1, false); root.add(magnet);
@@ -296,7 +296,7 @@ export function createGL(canvas, env) {
     sideTex[3].offset.x = t * 0.02;
     // ground chunks + scenery
     const base = Math.floor((R.z - 420) / CH);
-    for (let k = 0; k < NCH; k++) { const idx = base + k, c = chunks[((idx % NCH) + NCH) % NCH], wz = idx * CH + CH / 2; if (c.idx !== idx) { c.idx = idx; const z = ((Math.floor(wz / env.ZLEN) % NZ) + NZ) % NZ; c.road.material = roadMat[z]; c.l.material = c.rr.material = sideMat[z]; populate(c.props, idx, z); } c.g.position.z = -(wz - R.z); }
+    for (let k = 0; k < NCH; k++) { const idx = base + k, c = chunks[((idx % NCH) + NCH) % NCH], wz = idx * CH + CH / 2; if (c.idx !== idx) { c.idx = idx; const z = wz < 0 ? 0 : Math.floor(wz / env.ZLEN) % NZ; c.road.material = roadMat[z]; c.l.material = c.rr.material = sideMat[z]; populate(c.props, idx, z); } c.g.position.z = -(wz - R.z); }
     // Sluggy
     setHat(hatId); const dead = R.state === 'dead', sliding = !dead && p.on && p.slide > 0, s = slug;
     s.root.position.set(p.x, p.y, 0); s.root.rotation.set(dead ? -p.rot : 0, -p.lean * 0.55, -p.lean * 0.5);
