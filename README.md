@@ -1,6 +1,6 @@
 # Game Night
 
-Two phone-friendly web games on one site. Open it and pick one:
+Three phone-friendly web games on one site. Open it and pick one:
 
 **Play:** https://mattschwartz691.github.io/king-of-the-ocean/
 
@@ -16,6 +16,11 @@ Sluggy is a banana slug who is really into business (he pronounces it "bidness")
 - Worms are very, very bad: unsold lots become worm holes, and on raid days the lower Early Bird bid gets their best shop shut down.
 - Richest slug after 8 days wins; the final payday counts double.
 - **Solo:** take down the five bosses of WormCo. **1v1:** slug vs slug on two phones (host shows a code/QR).
+
+## Sluggy Run (`/sluggy-run`)
+An endless runner: Sluggy is late for bidness. Tap the right side to jump (tap again to double jump), hold the left side to slide, and slam down on worms to stomp them. Never touch the salt.
+Seven environments loop and speed up: Redwood Forest, Downtown, The Office, The Boardwalk, Stock Market, Worm Tunnels and The Moon (low gravity).
+Power-ups (magnet, slime shield, espresso rush, double coins), stomp combos, and coins you bank to buy Sluggy hats.
 
 ## Tech
 Zero-build static site: vanilla JS modules + Canvas 2D; all art and audio are generated in code.

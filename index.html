@@ -19,7 +19,7 @@
     background: radial-gradient(ellipse at 30% 20%, #4b2a9c, transparent 60%), radial-gradient(ellipse at 80% 90%, #0c6fa8, transparent 55%), #1b1140; overflow-x: hidden; }
   h1 { margin: 0; font-size: clamp(26px, 6.5vw, 44px); font-weight: 900; text-align: center; line-height: 1.05; text-shadow: 0 4px 0 rgba(0, 0, 0, 0.3); }
   h1 small { display: block; font-size: 0.42em; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #ffd84a; margin-bottom: 6px; }
-  .games { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 760px; }
+  .games { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1120px; }
   a.game { flex: 1 1 260px; max-width: 360px; text-decoration: none; color: #fff; border-radius: 28px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
     border: 3px solid rgba(255, 255, 255, 0.35); box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35), 0 20px 40px rgba(0, 0, 0, 0.35); transition: transform 0.12s; animation: rise 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; }
   a.game:nth-child(2) { animation-delay: 0.1s; }
@@ -27,6 +27,8 @@
   @keyframes rise { from { transform: translateY(40px) scale(0.9); opacity: 0; } }
   .ocean { background: linear-gradient(180deg, #2bb7e6, #0b5c9c); }
   .sluggy { background: linear-gradient(180deg, #7ed957, #2f8f3a); }
+  .run { background: linear-gradient(180deg, #ffb347, #d9480f); }
+  a.game:nth-child(3) { animation-delay: 0.2s; } .run img { animation-delay: -0.9s; }
   .game img { width: min(46vw, 170px); aspect-ratio: 1; border-radius: 26px; border: 3px solid rgba(255, 255, 255, 0.7); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); animation: bob 3.5s ease-in-out infinite; }
   .sluggy img { animation-delay: -1.7s; }
   @keyframes bob { 50% { transform: translateY(-6px) rotate(1.5deg); } }
@@ -37,12 +39,12 @@
   .col { display: contents; }
   @media (max-width: 700px), (max-height: 520px) {
     body { gap: 16px; }
-    a.game { flex: 1 1 100%; max-width: 520px; flex-direction: row; text-align: left; padding: 14px; gap: 14px; }
-    .game img { width: min(32vw, 124px); border-radius: 20px; flex: none; }
+    a.game { flex: 1 1 100%; max-width: 520px; flex-direction: row; text-align: left; padding: 11px 13px; gap: 13px; }
+    .game img { width: min(28vw, 108px); border-radius: 20px; flex: none; }
     .col { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
     .game b { font-size: 23px; } .game span { font-size: 13px; } .game i { font-size: 10.5px; } .play { font-size: 16px; padding: 7px 24px; }
   }
-  @media (orientation: landscape) and (max-height: 520px) { .games { flex-wrap: nowrap; } a.game { flex: 1 1 0; } .game img { width: 96px; } .game span { display: none; } }
+  @media (orientation: landscape) and (max-height: 520px) { .games { flex-wrap: nowrap; gap: 10px; } a.game { flex: 1 1 0; padding: 9px; gap: 9px; } .game img { width: 70px; } .game span, .game i { display: none; } .game b { font-size: 18px; } }
 </style>
 </head>
 <body>
@@ -55,6 +57,10 @@
     <a class="game sluggy" href="sluggy/">
       <img src="sluggy/icon-512.png" alt="">
       <div class="col"><b>Sluggy's Business</b><span>Outbid the worms and build a garden empire. It's pronounced “bidness.”</span><i>Strategy · 1–2 players</i><div class="play">Play</div></div>
+    </a>
+    <a class="game run" href="sluggy-run/">
+      <img src="sluggy-run/icon-512.png" alt="">
+      <div class="col"><b>Sluggy Run</b><span>Sluggy's late for bidness! Dash from the redwoods to the moon.</span><i>Runner · 1 player</i><div class="play">Play</div></div>
     </a>
   </div>
 </body>

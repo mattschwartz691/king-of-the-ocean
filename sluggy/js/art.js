@@ -84,8 +84,11 @@ export function drawShop(g, type, t = 0) {
 export function drawSlug(g, pal, o = {}) {
   const t = o.t || 0, mood = o.mood || 'happy', w = Math.sin(t * 3) * 1.6;
   g.lineJoin = 'round'; g.lineCap = 'round';
-  g.fillStyle = 'rgba(255,255,255,0.4)'; g.beginPath(); g.ellipse(-72, 25, 24, 3.5, 0, 0, TAU); g.fill();
-  g.fillStyle = 'rgba(40,20,5,0.2)'; g.beginPath(); g.ellipse(0, 27, 62, 6, 0, 0, TAU); g.fill();
+  if (o.shadow !== false) {
+    g.fillStyle = 'rgba(255,255,255,0.4)'; g.beginPath(); g.ellipse(-72, 25, 24, 3.5, 0, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(40,20,5,0.2)'; g.beginPath(); g.ellipse(0, 27, 62, 6, 0, 0, TAU); g.fill();
+  }
+  if (o.under) o.under(g); // e.g. a hat that sits behind the eye stalks
   const droop = mood === 'sad' ? 12 : mood === 'shock' ? -5 : 0;
   // eye stalks
   for (const [bx, tx, ty] of [[38, 33, -60], [52, 62, -56]]) {

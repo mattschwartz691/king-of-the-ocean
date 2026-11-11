@@ -1,0 +1,15 @@
+{
+  "name": "Sluggy Run",
+  "short_name": "Sluggy Run",
+  "description": "An endless runner starring Sluggy the banana slug, who is late for bidness.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0d3a3c",
+  "theme_color": "#0d3a3c",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
