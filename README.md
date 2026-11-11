@@ -19,6 +19,7 @@ Sluggy is a banana slug who is really into business (he pronounces it "bidness")
 
 ## Sluggy Run (`/sluggy-run`)
 An endless runner: Sluggy is late for bidness. Tap the right side to jump (tap again to double jump), hold the left side to slide, and slam down on worms to stomp them. Never touch the salt.
+Two ways to play, chosen on the start screen: **Side View** (the side-scroller above) or **3D Chase**, a behind-the-slug three-lane runner where you swipe left/right to change lanes, up to jump and down to slide.
 Seven environments loop and speed up: Redwood Forest, Downtown, The Office, The Boardwalk, Stock Market, Worm Tunnels and The Moon (low gravity).
 Power-ups (magnet, slime shield, espresso rush, double coins), stomp combos, and coins you bank to buy Sluggy hats.
 

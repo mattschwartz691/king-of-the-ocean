@@ -1,7 +1,8 @@
 // Sluggy Run — endless runner starring Sluggy the banana slug.
 import { drawSlug, drawCoin, PAL, OUT } from '../../sluggy/js/art.js';
 import { ZONES, TW, TH, buildLayer, drawSkyFx, drawGround, drawObstacle, drawSalt, drawPlatform, drawWorm, drawPower, drawHat, HATS, POWERS } from './zones.js';
-import { initAudio, sfx, startMusic, setMuted, setHot, setTempo, suspendAudio } from './audio.js';
+import { initAudio, sfx, startMusic, setMuted, setHot, setTempo, setTrack, suspendAudio } from './audio.js';
+import { createRun3D } from './run3d.js';
 
 const $ = (id) => document.getElementById(id);
 const cv = $('cv'), g = cv.getContext('2d');
@@ -13,7 +14,7 @@ const BOT = new URLSearchParams(location.search).has('bot');
 
 // ------------------------------------------------------------------ save
 const SAVE_KEY = 'sluggyrun.save';
-const save = { best: 0, bestDist: 0, bank: 0, hats: ['none'], hat: 'none', muted: false, runs: 0 };
+const save = { mode: '2d', best3: 0, bestDist3: 0, runs3: 0, best: 0, bestDist: 0, bank: 0, hats: ['none'], hat: 'none', muted: false, runs: 0 };
 try { Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}')); } catch (e) { /* private mode */ }
 const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
 
@@ -276,8 +277,8 @@ function drawPlayer() {
   if (G.pw.shield) { g.beginPath(); g.ellipse(-2, -8, 86, 62 + Math.sin(G.t * 6) * 2, 0, 0, TAU); g.fillStyle = 'rgba(105,219,124,.22)'; g.fill(); g.strokeStyle = 'rgba(211,249,216,.9)'; g.lineWidth = 4; g.stroke(); g.beginPath(); g.ellipse(-36, -40, 16, 7, -0.6, 0, TAU); g.fillStyle = 'rgba(255,255,255,.55)'; g.fill(); }
   g.restore();
 }
-function drawPills() {
-  const items = []; if (G.pw.rush > 0) items.push(['rush', G.pw.rush / 4.5]); if (G.pw.magnet > 0) items.push(['magnet', G.pw.magnet / 9]); if (G.pw.x2 > 0) items.push(['x2', G.pw.x2 / 10]); if (G.pw.shield) items.push(['shield', 1]);
+function drawPills(pw = G.pw) {
+  const items = []; if (pw.rush > 0) items.push(['rush', pw.rush / 4.5]); if (pw.magnet > 0) items.push(['magnet', pw.magnet / 9]); if (pw.x2 > 0) items.push(['x2', pw.x2 / 10]); if (pw.shield) items.push(['shield', 1]);
   g.setTransform(DPR, 0, 0, DPR, 0, 0); let y = SAT + 84;
   for (const [k, f] of items) {
     g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.roundRect ? g.roundRect(12, y, 128, 30, 15) : g.rect(12, y, 128, 30); g.fill();
@@ -320,31 +321,41 @@ function draw() {
 // ------------------------------------------------------------------ screens
 const screens = ['title', 'over', 'shop', 'pause'];
 function show(name) { for (const s of screens) $('scr-' + s).classList.toggle('hidden', s !== name); $('hud').classList.toggle('hidden', !!name && name !== 'pause'); }
-let paused = false, shopFrom = 'title';
-function refreshTitle() { $('titleBest').textContent = save.best ? `Best: ${save.best}  ·  ${save.bestDist} m` : ''; $('titleBank').textContent = save.bank; $('btnMute').textContent = save.muted ? '🔇' : '🔊'; $('btnMute2').textContent = (save.muted ? '🔇' : '🔊') + ' Sound'; }
+let paused = false, shopFrom = 'title', active3 = false, overId = 0;
+const R3 = createRun3D({ g, save, sfx, bot: BOT, tile, banner, bump, setHot, setTempo, drawPills, view: () => ({ W, H, DPR }), onOver: (res) => showOver(res) });
+function setMode(m) { save.mode = m; persist(); sfx.click(); refreshTitle(); }
+function refreshTitle() {
+  const is3 = save.mode === '3d', b = is3 ? save.best3 : save.best, d = is3 ? save.bestDist3 : save.bestDist;
+  $('titleBest').textContent = b ? `Best: ${b}  ·  ${d} m` : ''; $('titleBank').textContent = save.bank; $('btnMute').textContent = save.muted ? '🔇' : '🔊'; $('btnMute2').textContent = (save.muted ? '🔇' : '🔊') + ' Sound';
+  $('mode2d').classList.toggle('on', !is3); $('mode3d').classList.toggle('on', is3); $('tips2d').classList.toggle('hidden', is3); $('tips3d').classList.toggle('hidden', !is3);
+}
 function startRun() {
-  initAudio(); setMuted(save.muted); setHot(false); setTempo(148); startMusic(); sfx.click();
-  reset('run'); paused = false; show(null); $('coins').textContent = '0'; draw.s = draw.d = -1;
+  const is3 = save.mode === '3d';
+  initAudio(); setMuted(save.muted); setHot(false); setTrack(is3 ? 'chase' : 'bounce'); setTempo(is3 ? 172 : 148); startMusic(); sfx.click();
+  paused = false; overId++; show(null); $('coins').textContent = '0'; draw.s = draw.d = -1;
   const z = ZONES[0]; banner(z.name, z.sub);
-  $('hint').classList.toggle('hidden', save.runs >= 3); if (save.runs < 3) { const h = $('hint'); h.style.animation = 'none'; void h.offsetWidth; h.style.animation = ''; }
-  save.runs++; persist();
+  const key = is3 ? 'runs3' : 'runs', h = $(is3 ? 'hint3' : 'hint'); $('hint').classList.add('hidden'); $('hint3').classList.add('hidden');
+  if (save[key] < 3) { h.classList.remove('hidden'); h.style.animation = 'none'; void h.offsetWidth; h.style.animation = ''; }
+  if (is3) { reset('title'); R3.start(); active3 = true; } else { active3 = false; reset('run'); }
+  save[key]++; persist();
 }
 const QUIPS = {
   salt: ['Salt?! In THIS economy?', 'Too salty. Bad for bidness.', 'A seasoned professional… too seasoned.'],
   worm: ['Hostile takeover by WormCo!', 'Wormed out of the deal.', 'The worms win this round.'], fly: ['Air-dropped by WormCo!', 'Drone strike on the bidness.'],
   high: ['Should have ducked that meeting.', 'Heads up! …too late.'], tall: ['That was a tall order.', 'Hit a wall in negotiations.'], low: ['Tripped over the fine print.', 'A small setback. Literally.', "That's bad bidness."],
 };
-function showOver() {
-  const sc = score(), dist = Math.floor(G.camX / M), isBest = sc > save.best && sc > 0;
-  save.bank += G.coins; if (isBest) save.best = sc; if (dist > save.bestDist) save.bestDist = dist; persist();
-  const q = QUIPS[G.cause] || QUIPS.low; $('overQuip').textContent = q[(rnd() * q.length) | 0];
-  $('overBest').classList.toggle('hidden', !isBest); $('stDist').textContent = dist + ' m'; $('stCoins').textContent = '+' + G.coins; $('stStomps').textContent = G.stomps;
-  const lap = Math.floor(G.zi / NZ); $('stZone').textContent = `Made it to ${ZONES[G.zi % NZ].name}${lap ? ' (lap ' + (lap + 1) + ')' : ''} · best ${save.best}`;
+function showOver(res) {
+  if (!res) res = { mode: '2d', sc: score(), dist: Math.floor(G.camX / M), coins: G.coins, stomps: G.stomps, cause: G.cause, zone: ZONES[G.zi % NZ].name, lap: Math.floor(G.zi / NZ) };
+  const bk = res.mode === '3d' ? 'best3' : 'best', dk = res.mode === '3d' ? 'bestDist3' : 'bestDist', sc = res.sc, isBest = sc > save[bk] && sc > 0;
+  save.bank += res.coins; if (isBest) save[bk] = sc; if (res.dist > save[dk]) save[dk] = res.dist; persist();
+  const q = QUIPS[res.cause] || QUIPS.low; $('overQuip').textContent = q[(rnd() * q.length) | 0]; $('hint').classList.add('hidden'); $('hint3').classList.add('hidden');
+  $('overBest').classList.toggle('hidden', !isBest); $('stDist').textContent = res.dist + ' m'; $('stCoins').textContent = '+' + res.coins; $('stStomps').textContent = res.stomps;
+  $('stZone').textContent = `${res.mode === '3d' ? '3D Chase' : 'Side View'} · made it to ${res.zone}${res.lap ? ' (lap ' + (res.lap + 1) + ')' : ''} · best ${save[bk]}`;
   $('overBank').textContent = save.bank; show('over');
-  const el = $('overScore'), t0 = performance.now(), dur = Math.min(1200, 400 + sc); let lastTick = 0;
-  (function tick(now) { const u = clamp((now - t0) / dur, 0, 1), v = Math.round(sc * (1 - Math.pow(1 - u, 3))); el.textContent = v; if (now - lastTick > 60 && u < 1) { lastTick = now; sfx.tick(u * 20); } if (u < 1 && G.shown) requestAnimationFrame(tick); else if (isBest) { sfx.best(); } })(t0);
+  const el = $('overScore'), t0 = performance.now(), dur = Math.min(1200, 400 + sc), id = ++overId; let lastTick = 0;
+  (function tick(now) { const u = clamp((now - t0) / dur, 0, 1), v = Math.round(sc * (1 - Math.pow(1 - u, 3))); el.textContent = v; if (now - lastTick > 60 && u < 1) { lastTick = now; sfx.tick(u * 20); } if (u < 1 && id === overId) requestAnimationFrame(tick); else if (isBest && id === overId) sfx.best(); })(t0);
 }
-function toTitle() { reset('title'); show('title'); refreshTitle(); setHot(false); }
+function toTitle() { active3 = false; overId++; reset('title'); show('title'); refreshTitle(); setHot(false); }
 function openShop(from) { shopFrom = from; sfx.click(); show('shop'); renderShop(); }
 function renderShop() {
   $('shopBank').textContent = save.bank; const box = $('hats'); box.innerHTML = '';
@@ -364,9 +375,10 @@ function renderShop() {
     box.append(b);
   }
 }
-function setPause(on) { if (G.state !== 'run') return; paused = on; show(on ? 'pause' : null); suspendAudio(on); }
+function setPause(on) { if (!(active3 ? R3.running() : G.state === 'run')) return; paused = on; show(on ? 'pause' : null); suspendAudio(on); }
 function toggleMute() { save.muted = !save.muted; persist(); initAudio(); setMuted(save.muted); refreshTitle(); }
 
+$('mode2d').onclick = () => { initAudio(); setMode('2d'); }; $('mode3d').onclick = () => { initAudio(); setMode('3d'); };
 $('btnPlay').onclick = startRun; $('btnAgain').onclick = startRun;
 $('btnShop').onclick = () => openShop('title'); $('btnShop2').onclick = () => openShop('over');
 $('btnShopBack').onclick = () => { sfx.click(); if (shopFrom === 'over') { $('overBank').textContent = save.bank; show('over'); } else { show('title'); refreshTitle(); } };
@@ -379,15 +391,17 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) setPa
 // ------------------------------------------------------------------ input
 const touches = new Map();
 cv.addEventListener('pointerdown', (e) => {
-  e.preventDefault(); if (G.state !== 'run' || paused) return;
+  e.preventDefault(); if (active3) { if (!paused) R3.pointer('down', e); return; }
+  if (G.state !== 'run' || paused) return;
   const isDuck = e.clientX < W * 0.38; touches.set(e.pointerId, { duck: isDuck, y: e.clientY, sw: false });
   if (isDuck) duck(true); else jump();
 });
-cv.addEventListener('pointermove', (e) => { const t = touches.get(e.pointerId); if (t && !t.duck && !t.sw && e.clientY - t.y > 42) { t.sw = true; duck(true); G.p.duckHeld = false; } });
-const up = (e) => { const t = touches.get(e.pointerId); if (!t) return; touches.delete(e.pointerId); if (t.duck) { if (![...touches.values()].some((q) => q.duck)) duck(false); } else release(); };
+cv.addEventListener('pointermove', (e) => { if (active3) { if (!paused) R3.pointer('move', e); return; } const t = touches.get(e.pointerId); if (t && !t.duck && !t.sw && e.clientY - t.y > 42) { t.sw = true; duck(true); G.p.duckHeld = false; } });
+const up = (e) => { if (active3) { R3.pointer(e.type === 'pointerup' && !paused ? 'up' : 'cancel', e); return; } const t = touches.get(e.pointerId); if (!t) return; touches.delete(e.pointerId); if (t.duck) { if (![...touches.values()].some((q) => q.duck)) duck(false); } else release(); };
 cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
 window.addEventListener('keydown', (e) => {
   if (e.repeat) return;
+  if (active3 && R3.running()) { e.preventDefault(); if (e.code === 'Escape' || e.code === 'KeyP') setPause(!paused); else if (!paused) R3.key(e.code); return; }
   if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); if (G.state === 'run') jump(); else if (!$('scr-title').classList.contains('hidden') || (!$('scr-over').classList.contains('hidden'))) startRun(); }
   else if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); duck(true); }
   else if (e.code === 'Escape' || e.code === 'KeyP') setPause(!paused);
@@ -402,9 +416,10 @@ resize(); reset('title'); refreshTitle();
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.034, (now - last) / 1000); last = now;
-  if (!paused) { if (dt > 0.02 && G.state === 'run') { step(dt / 2); if (G.state === 'run') step(dt / 2); } else step(dt); }
-  draw(); requestAnimationFrame(frame);
+  if (active3) { if (!paused) { R3.step(dt / 2); R3.step(dt / 2); } R3.draw(); }
+  else { if (!paused) { if (dt > 0.02 && G.state === 'run') { step(dt / 2); if (G.state === 'run') step(dt / 2); } else step(dt); } draw(); }
+  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.__run = { get G() { return G; }, save, ZLEN, startRun, warp(zi, frac = 0.05) { G.camX = (zi + frac) * ZLEN; G.nextX = G.camX + VW + 300; G.ents = []; G.trail = []; }, jump, duck,
+window.__run = { R3, setMode(m) { save.mode = m; refreshTitle(); }, get G() { return G; }, save, ZLEN, startRun, warp(zi, frac = 0.05) { G.camX = (zi + frac) * ZLEN; G.nextX = G.camX + VW + 300; G.ents = []; G.trail = []; }, jump, duck,
   sim(sec) { const t0 = G.camX; for (let i = 0; i < sec * 60 && G.state === 'run'; i++) step(1 / 60); return { state: G.state, m: Math.round(G.camX / M), cause: G.cause, last: G.last, score: score(), coins: G.coins, stomps: G.stomps, zi: G.zi }; } };

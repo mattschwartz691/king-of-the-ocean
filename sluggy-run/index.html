@@ -24,14 +24,18 @@
 <div id="banner"><b></b><span></span></div>
 <div id="hint" class="hidden"><div class="l"><b>HOLD</b>to slide</div><div class="r"><b>TAP</b>to jump<small>tap again = double jump</small></div></div>
 
+<div id="hint3" class="hidden"><div><b>SWIPE</b><span>← → change lanes</span><span>↑ jump &nbsp;·&nbsp; ↓ slide</span></div></div>
+
 <div id="scr-title" class="screen">
   <a class="back" href="../">‹ All games</a>
   <button class="mute" id="btnMute" aria-label="Sound">🔊</button>
   <div class="logo"><small>Late for bidness!</small>SLUGGY<br><em>RUN</em></div>
   <div class="best" id="titleBest"></div>
+  <div class="modes"><button id="mode2d"><b>Side View</b><small>classic side-scroller</small></button><button id="mode3d"><b>3D Chase</b><small>behind the slug</small></button></div>
   <button class="big" id="btnPlay">RUN!</button>
   <button class="mid" id="btnShop">🎩 Hats <span class="bank"><i class="coin"></i><b id="titleBank">0</b></span></button>
-  <div class="tips"><span><b>Tap</b> right side: jump (twice = double jump)</span><span><b>Hold</b> left side: slide · in the air: slam down</span><span><b>Stomp</b> the worms. Never touch the salt!</span></div>
+  <div class="tips hidden" id="tips3d"><span><b>Swipe left / right</b> to change lanes</span><span><b>Swipe up</b> to jump · <b>swipe down</b> to slide</span><span><b>Land on</b> worms to stomp them. Never touch the salt!</span></div>
+  <div class="tips" id="tips2d"><span><b>Tap</b> right side: jump (twice = double jump)</span><span><b>Hold</b> left side: slide · in the air: slam down</span><span><b>Stomp</b> the worms. Never touch the salt!</span></div>
 </div>
 
 <div id="scr-over" class="screen hidden">

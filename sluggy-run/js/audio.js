@@ -1,6 +1,6 @@
 // Sluggy Run — synthesized audio (no asset files).
 let ac = null, master = null, sfxBus = null, musicBus = null, noiseBuf = null;
-let muted = false, musicOn = false, timer = null, nextNote = 0, stepN = 0, bpm = 148, hot = false;
+let muted = false, musicOn = false, timer = null, nextNote = 0, stepN = 0, bpm = 148, hot = false, track = 'bounce';
 
 export function initAudio() {
   if (ac) { if (ac.state !== 'running') ac.resume().catch(() => {}); return; }
@@ -59,6 +59,7 @@ export const sfx = {
   best() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.2, { type: 'triangle', vol: 0.2, delay: i * 0.085 })); },
   tick(n = 0) { tone(520 + n * 22, 0.04, { type: 'square', vol: 0.06 }); },
   buy() { noise(0.05, { from: 6000, q: 2, vol: 0.25 }); [1319, 1661, 2093].forEach((f, i) => tone(f, 0.3, { type: 'triangle', vol: 0.16, delay: 0.05 + i * 0.045 })); },
+  swish() { noise(0.09, { from: 1200, to: 3800, q: 1.4, vol: 0.13 }); },
   nope() { tone(200, 0.12, { type: 'square', vol: 0.12 }); tone(160, 0.16, { type: 'square', vol: 0.12, delay: 0.1 }); },
 };
 
@@ -82,10 +83,40 @@ function step(at) {
   const n = LEAD[(bar % 4)][s] + (bar >= 4 && s >= 8 && bar % 2 ? 0 : 0);
   if (n && (bar < 4 || s % 2 === 0 || bar % 2)) { tone(hz(n), 0.17, { type: 'square', vol: 0.085, bus: musicBus, at }); tone(hz(n + 12), 0.1, { type: 'triangle', vol: 0.05, bus: musicBus, at }); }
 }
+// ---- chase music (3D mode): fast E-minor drive — four-on-the-floor, pumping saw bass, racing arps
+function saw(freq, dur, o = {}) {
+  if (!ac) return; const t = o.at ?? ac.currentTime, osc = ac.createOscillator(), fl = ac.createBiquadFilter(), g = ac.createGain();
+  osc.type = o.type || 'sawtooth'; osc.frequency.setValueAtTime(freq, t); fl.type = 'lowpass'; fl.Q.value = o.q ?? 6;
+  fl.frequency.setValueAtTime(o.cut || 1800, t); fl.frequency.exponentialRampToValueAtTime(o.cutTo || 300, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.vol ?? 0.3, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(fl); fl.connect(g); g.connect(musicBus); osc.start(t); osc.stop(t + dur + 0.05);
+}
+const CH2 = [[40, 15], [36, 16], [38, 16], [35, 15]]; // Em  C  D  Bm  (root, third)
+const BASS2 = [0, 0, 12, 0, 0, 12, 0, 0, 12, 0, 0, 12, 0, 12, 7, 12];
+const LEAD2 = [
+  [76, 0, 0, 79, 0, 0, 83, 0, 0, 0, 81, 0, 79, 0, 0, 0],
+  [84, 0, 0, 83, 0, 0, 79, 0, 0, 0, 76, 0, 0, 0, 79, 0],
+  [81, 0, 0, 78, 0, 0, 74, 0, 0, 0, 78, 0, 81, 0, 0, 0],
+  [83, 0, 0, 0, 0, 0, 86, 0, 83, 0, 0, 0, 78, 0, 81, 83],
+];
+function stepChase(at) {
+  const bar = stepN >> 4, s = stepN & 15, ph = bar % 8, [root, third] = CH2[bar % 4];
+  if (s % 4 === 0 || (hot && s === 14) || (ph === 7 && s >= 12)) { tone(160, 0.13, { to: 42, vol: 0.75, bus: musicBus, at }); noise(0.02, { from: 3000, q: 0.5, vol: 0.2, bus: musicBus, at }); }
+  if (s === 4 || s === 12) { noise(0.13, { from: 2300, q: 0.6, vol: 0.4, bus: musicBus, at }); tone(210, 0.08, { to: 120, type: 'triangle', vol: 0.3, bus: musicBus, at }); }
+  noise(0.022, { from: 9000, q: 1.2, vol: s % 2 ? 0.07 : 0.11, bus: musicBus, at });
+  if (s % 4 === 2) noise(0.09, { from: 7000, q: 0.8, vol: 0.17, bus: musicBus, at });
+  saw(hz(root + BASS2[s]), 0.1, { vol: s % 4 === 0 ? 0.3 : 0.62, cut: hot ? 2600 : 1500, cutTo: 260, at });
+  if (ph >= 2) { const arp = [0, 7, 12, third, 19, third, 12, 7][s % 8]; tone(hz(root + 24 + arp), 0.07, { type: 'square', vol: 0.055, bus: musicBus, at }); }
+  if (s === 0 || s === 6 || s === 10) for (const n of [0, third - 12, 7]) saw(hz(root + 24 + n), 0.16, { vol: 0.09, cut: 3000, cutTo: 900, q: 2, at });
+  const n = LEAD2[bar % 4][s];
+  if (n && ph >= 4) { saw(hz(n), 0.24, { vol: 0.16, cut: 4200, cutTo: 1400, q: 3, at }); tone(hz(n), 0.2, { type: 'square', vol: 0.06, bus: musicBus, at }); }
+  if (ph === 7 && s === 8) noise(60 / bpm * 2, { from: 600, to: 9000, q: 2, vol: 0.2, attack: 60 / bpm * 1.8, bus: musicBus, at });
+}
+export function setTrack(t) { if (t !== track) { track = t; stepN = 0; } }
 function pump() {
   if (!ac || !musicOn) return;
   if (nextNote < ac.currentTime) nextNote = ac.currentTime + 0.05;
-  while (nextNote < ac.currentTime + 0.18) { step(nextNote); nextNote += 60 / (hot ? bpm * 1.12 : bpm) / 4; stepN++; }
+  while (nextNote < ac.currentTime + 0.18) { (track === 'chase' ? stepChase : step)(nextNote); nextNote += 60 / (hot ? bpm * 1.12 : bpm) / 4; stepN++; }
 }
 export function startMusic() { musicOn = true; if (!ac || timer) return; nextNote = ac.currentTime + 0.08; timer = setInterval(pump, 50); }
 export function stopMusic() { musicOn = false; if (timer) { clearInterval(timer); timer = null; } }
