@@ -29,6 +29,7 @@ i.coin { display: inline-block; width: 1em; height: 1em; border-radius: 50%; bac
 #hint div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: calc(var(--sab) + 9vh); font-weight: 800; font-size: 15px; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); text-align: center; }
 #hint .l { flex: 0 0 38%; background: linear-gradient(0deg, rgba(80, 190, 255, 0.28), transparent 55%); border-right: 2px dashed rgba(255, 255, 255, 0.4); }
 #hint .r { flex: 1; background: linear-gradient(0deg, rgba(255, 220, 80, 0.26), transparent 55%); }
+#hint .one { flex: 1; background: linear-gradient(0deg, rgba(255, 220, 80, 0.3), transparent 60%); line-height: 1.25; } #hint .one b { margin-top: 6px; color: #ffe45c; }
 #hint b { font-size: 26px; font-weight: 900; } #hint small { font-size: 12px; opacity: 0.9; }
 @keyframes hint { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 
