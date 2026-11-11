@@ -92,9 +92,11 @@ export function drawSlug(g, pal, o = {}) {
   const droop = mood === 'sad' ? 12 : mood === 'shock' ? -5 : 0;
   // eye stalks
   for (const [bx, tx, ty] of [[38, 33, -60], [52, 62, -56]]) {
-    const ex = tx + w * 1.4 + (mood === 'sad' ? (tx < 50 ? -8 : 8) : 0), ey = ty + droop + Math.cos(t * 3 + tx) * 1.2;
+    let ex = tx + w * 1.4 + (mood === 'sad' ? (tx < 50 ? -8 : 8) : 0), ey = ty + droop + Math.cos(t * 3 + tx) * 1.2;
+    if (o.stalk !== undefined || o.eyeDx || o.eyeDy) { const k = o.stalk ?? 1; ex = bx + (ex - bx) * k + (o.eyeDx || 0); ey = -26 + (ey + 26) * k + (o.eyeDy || 0); } // optional: retract / sway the eye stalks
     g.beginPath(); g.moveTo(bx, -26); g.quadraticCurveTo(bx - 2, (ey - 26) / 2 - 8, ex, ey);
     g.strokeStyle = OUT; g.lineWidth = 10; g.stroke(); g.strokeStyle = pal.main; g.lineWidth = 5.5; g.stroke();
+    const es = o.eyeScale; if (es) { g.save(); g.translate(ex, ey); g.scale(es[0], es[1]); g.translate(-ex, -ey); } // optional: keep the eyeballs round while the body is squashed
     g.beginPath(); g.arc(ex, ey, 9.5, 0, TAU); fs(g, '#fff', 3);
     if (mood === 'smug') { g.fillStyle = '#2b8a3e'; g.font = '900 14px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$', ex, ey + 0.5); }
     else {
@@ -102,6 +104,7 @@ export function drawSlug(g, pal, o = {}) {
       g.beginPath(); g.arc(ex + 4, ey - 1.2, 1.4, 0, TAU); g.fillStyle = '#fff'; g.fill();
       if (mood === 'sad') { g.beginPath(); g.arc(ex, ey, 9.5, Math.PI * 1.05, Math.PI * 1.95); g.closePath(); g.fillStyle = pal.dark; g.fill(); g.strokeStyle = OUT; g.lineWidth = 2; g.stroke(); }
     }
+    if (es) g.restore();
   }
   // body
   g.beginPath(); g.moveTo(-68, 23);

@@ -423,3 +423,18 @@ export function drawWormFront(g, t, zi) {
   else if (zi === 6) { g.beginPath(); g.arc(0, -17, 23, 0, TAU); g.fillStyle = 'rgba(200,230,255,.25)'; g.fill(); g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2; g.stroke(); }
   else { g.beginPath(); g.arc(0, -29, 14, Math.PI, 0); g.closePath(); fs(g, '#ffd43b', 2.2); box(g, -18, -31, 36, 5, 2, '#ffd43b', 2.2); }
 }
+
+// ------------------------------------------------------------------ slime ledge (Side View): sticky underside, walkable top. Origin = underside, left end.
+export function drawLedge(g, w, zi, t, hint) {
+  const c = [['#a8683a', '#5fb347'], ['#8d93a3', '#eceff4'], ['#a5b1c8', '#fff'], ['#d9a066', '#f7dba3'], ['#232a4d', '#3df5a0'], ['#8a5a30', '#b98a52'], ['#aab0c6', '#eef0f7']][zi];
+  g.lineJoin = 'round';
+  if (zi !== 6) for (const x of [12, w - 12]) { rect(g, x - 3.5, -1216, 7, 1200, OUT); rect(g, x - 1.5, -1216, 3, 1200, ZONES[zi].hang || '#868e96'); }
+  else { g.fillStyle = 'rgba(120,200,255,.4)'; for (const x of [20, w - 20]) { poly(g, [[x - 8, 0], [x + 8, 0], [x, 22 + Math.sin(t * 20 + x) * 4]]); g.fill(); } }
+  box(g, 0, -16, w, 16, 6, c[0]); R(g, 2, -15, w - 4, 6, 3); g.fillStyle = c[1]; g.fill();
+  const n = Math.max(3, Math.round(w / 22)), st = (w - 8) / n; g.beginPath(); g.moveTo(4, -5);
+  for (let i = 0; i < n; i++) { const d = 5 + ((i * 7) % 3) * 4 + Math.sin(t * 2.2 + i * 1.7) * 2; g.quadraticCurveTo(4 + (i + 0.5) * st, d * 2 - 5, 4 + (i + 1) * st, -5 + (i === n - 1 ? 0 : 3)); }
+  g.closePath(); fs(g, '#e6f56e', 2.5);
+  g.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i < n; i += 2) { g.beginPath(); g.ellipse(4 + (i + 0.5) * st - 3, 1, 2.6, 1.5, 0, 0, TAU); g.fill(); }
+  for (let i = 1; i < n; i += 3) { const u = (t * 0.6 + i * 0.37) % 1; g.globalAlpha = 1 - u; g.fillStyle = '#e6f56e'; g.beginPath(); g.ellipse(4 + (i + 0.5) * st, 8 + u * 46, 2.4, 4, 0, 0, TAU); g.fill(); g.globalAlpha = 1; }
+  if (hint) { const bob = Math.sin(t * 6) * 4, x = Math.min(w / 2, 150); g.font = '900 17px ui-rounded, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 5; g.strokeStyle = OUT; g.strokeText('▲ BOING UP TO STICK ▲', x, -38 + bob); g.fillStyle = '#e6f56e'; g.fillText('▲ BOING UP TO STICK ▲', x, -38 + bob); }
+}
