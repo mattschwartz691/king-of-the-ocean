@@ -1,5 +1,5 @@
 // King of the Ocean — synthesized audio (WebAudio, no asset files).
-let ac = null, master = null, sfxBus = null, musicBus = null, noiseBuf = null;
+let ac = null, master = null, sfxBus = null, musicBus = null, drumBus = null, noiseBuf = null;
 let muted = false, musicTimer = null, nextNote = 0, stepN = 0, intense = false, musicOn = false;
 
 export function initAudio() {
@@ -13,9 +13,10 @@ export function initAudio() {
   master.connect(comp); comp.connect(ac.destination);
   sfxBus = ac.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
   musicBus = ac.createGain(); musicBus.gain.value = 0.34; musicBus.connect(master);
+  drumBus = ac.createGain(); drumBus.gain.value = 0.36; drumBus.connect(master);
   // feedback delay for music
-  const delay = ac.createDelay(1); delay.delayTime.value = 0.33;
-  const fb = ac.createGain(); fb.gain.value = 0.35;
+  const delay = ac.createDelay(1); delay.delayTime.value = 0.375;
+  const fb = ac.createGain(); fb.gain.value = 0.26;
   const dl = ac.createBiquadFilter(); dl.type = 'lowpass'; dl.frequency.value = 1800;
   musicBus.connect(delay); delay.connect(dl); dl.connect(fb); fb.connect(delay); dl.connect(master);
   noiseBuf = ac.createBuffer(1, ac.sampleRate * 1, ac.sampleRate);
@@ -52,7 +53,7 @@ function noise(dur, o = {}) {
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(v, t + (o.attack || 0.01));
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f); f.connect(g); g.connect(sfxBus);
+  src.connect(f); f.connect(g); g.connect(o.bus || sfxBus);
   src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.05);
 }
 
@@ -85,31 +86,89 @@ export const sfx = {
   lose() { [392, 370, 330, 262].forEach((f, i) => tone(f, i === 3 ? 0.7 : 0.25, { type: 'triangle', vol: 0.22, delay: i * 0.2 })); },
 };
 
-// --- generative music: breezy pentatonic arps over a slow bass
-const CHORDS = [
-  [146.83, [293.66, 369.99, 440, 587.33, 739.99]],   // D
-  [123.47, [246.94, 293.66, 369.99, 493.88, 587.33]], // Bm
-  [196.0, [293.66, 392, 493.88, 587.33, 783.99]],     // G
-  [220.0, [277.18, 329.63, 440, 554.37, 659.25]],     // A
+// --- music: a bouncy tropical loop (marimba hook, tresillo bass, off-beat stabs, drums)
+const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const _ = null;
+// chords: D  A  Bm  G   (bass root, stab triad)
+const BARS = [
+  { bass: 38, stab: [66, 69, 74] },
+  { bass: 33, stab: [64, 69, 73] },
+  { bass: 35, stab: [66, 71, 74] },
+  { bass: 31, stab: [67, 71, 74] },
 ];
-const PATTERN = [0, 2, 1, 3, 2, 4, 3, 1, 0, 3, 2, 4, 1, 3, 2, 0];
+const HOOK_A = [
+  [78, _, _, 78, _, 81, _, 78, _, 76, _, 74, _, _, 69, _],
+  [76, _, _, 76, _, 78, _, 76, _, 73, _, 69, _, _, _, _],
+  [74, _, _, 74, _, 78, _, 74, _, 71, _, 74, _, _, 78, _],
+  [79, _, 78, _, 76, _, 74, _, 76, _, _, _, 69, _, 73, _],
+];
+const HOOK_B = [
+  [81, _, _, 81, _, 83, _, 81, _, 78, _, 74, _, _, 78, _],
+  [81, _, _, 79, _, 78, _, 76, _, _, 73, _, 76, _, _, _],
+  [78, _, _, 78, _, 74, _, 71, _, 74, _, 78, _, _, 81, _],
+  [79, _, _, 78, _, 76, _, 74, _, _, _, _, 69, 71, 73, _],
+];
+const BASS_STEPS = { 0: 0, 3: 0, 6: 12, 8: 0, 11: 7, 14: 12 };
+
+const SCALE = [62, 64, 66, 67, 69, 71, 73]; // D major
+function thirdBelow(m) {
+  const i = SCALE.findIndex((n) => (n - m) % 12 === 0);
+  if (i < 0) return m - 3;
+  const j = (i + 5) % 7;                       // two scale steps down
+  let d = ((SCALE[i] - SCALE[j]) % 12 + 12) % 12;
+  return m - d;
+}
+function marimba(m, d, vol, len = 0.26) {
+  const f = hz(m);
+  tone(f, len, { type: 'sine', vol, bus: musicBus, delay: d, attack: 0.004 });
+  tone(f * 2, len * 0.6, { type: 'triangle', vol: vol * 0.45, bus: musicBus, delay: d, attack: 0.004 });
+  tone(f * 4, 0.06, { type: 'sine', vol: vol * 0.3, bus: musicBus, delay: d, attack: 0.002 });
+}
+function kick(d, v = 1) { tone(150, 0.2, { to: 42, type: 'sine', vol: 0.95 * v, bus: drumBus, delay: d, attack: 0.003 }); }
+function clap(d, v = 1) {
+  noise(0.13, { type: 'bandpass', from: 1700, q: 0.9, vol: 0.5 * v, bus: drumBus, delay: d, attack: 0.003 });
+  noise(0.05, { type: 'bandpass', from: 2400, q: 1.2, vol: 0.3 * v, bus: drumBus, delay: d + 0.012, attack: 0.002 });
+}
+function hat(d, v = 1, len = 0.04) { noise(len, { type: 'highpass', from: 7500, q: 0.5, vol: 0.2 * v, bus: drumBus, delay: d, attack: 0.002 }); }
 
 function schedule() {
   if (!ac || !musicOn) return;
-  const stepDur = intense ? 0.15 : 0.2;
+  const stepDur = intense ? 0.106 : 0.125;       // 16th notes: 120 bpm, 141 bpm in the final stretch
   while (nextNote < ac.currentTime + 0.25) {
-    const bar = Math.floor(stepN / 16) % CHORDS.length, s = stepN % 16;
-    const [bass, notes] = CHORDS[bar];
-    const dly = Math.max(0, nextNote - ac.currentTime);
-    if (s % 8 === 0) {
-      tone(bass / 2, stepDur * 7.5, { type: 'triangle', vol: 0.5, bus: musicBus, delay: dly, attack: 0.03 });
-      tone(bass, stepDur * 7.5, { type: 'sine', vol: 0.22, bus: musicBus, delay: dly, attack: 0.05 });
+    const s = stepN % 16, barN = Math.floor(stepN / 16);
+    const sec = Math.floor(barN / 4) % 4;          // 0: hook A, 1: hook B, 2: breakdown, 3: hook A + harmony
+    const bar = BARS[barN % 4];
+    const swing = s % 2 ? stepDur * 0.14 : 0;
+    const d = Math.max(0, nextNote - ac.currentTime) + swing;
+    const breakdown = sec === 2 && !intense;
+
+    // drums
+    if (s === 0 || s === 8 || (intense && (s === 4 || s === 12)) || (s === 14 && barN % 4 === 3)) kick(d, breakdown ? 0.7 : 1);
+    if (!breakdown && (s === 4 || s === 12)) clap(d);
+    if (s % 4 === 2) hat(d, 1, 0.07); else if (s % 2 === 1) hat(d, 0.35); else if (!breakdown) hat(d, 0.5);
+    if (barN % 4 === 3 && s >= 12 && !breakdown) clap(d, 0.35 + (s - 12) * 0.15); // little fill into the next phrase
+
+    // bass (tresillo)
+    if (s in BASS_STEPS) {
+      const f = hz(bar.bass + BASS_STEPS[s]);
+      tone(f, stepDur * 2.2, { type: 'triangle', vol: 0.7, bus: musicBus, delay: d, attack: 0.006 });
+      tone(f, stepDur * 2.2, { type: 'square', vol: 0.09, bus: musicBus, delay: d, attack: 0.006 });
     }
-    if (s % 2 === 0 || intense || (stepN >> 4) % 2 === 1) {
-      const f = notes[PATTERN[s]] * ((stepN >> 5) % 2 && s % 4 === 3 ? 2 : 1);
-      tone(f, stepDur * 1.7, { type: 'triangle', vol: s % 4 === 0 ? 0.3 : 0.2, bus: musicBus, delay: dly });
+    // off-beat chord stabs
+    if (s === 2 || s === 6 || s === 10 || s === 14) {
+      for (const m of bar.stab) tone(hz(m), stepDur * 0.9, { type: 'triangle', vol: breakdown ? 0.07 : 0.11, bus: musicBus, delay: d, attack: 0.004 });
     }
-    if (intense && s % 4 === 0) tone(60, 0.12, { to: 40, type: 'sine', vol: 0.8, bus: musicBus, delay: dly });
+    // lead
+    if (breakdown) {
+      // sparkly arpeggio to give the hook a rest
+      if (s % 2 === 0) { const st = bar.stab; marimba(st[(s / 2) % 3] + (s % 8 >= 4 ? 12 : 0), d, 0.16, 0.18); }
+    } else {
+      const m = (sec === 1 ? HOOK_B : HOOK_A)[barN % 4][s];
+      if (m !== null) {
+        marimba(m, d, 0.42);
+        if (sec === 3 || intense) marimba(thirdBelow(m), d, 0.15); // diatonic harmony
+      }
+    }
     nextNote += stepDur; stepN++;
   }
 }
@@ -117,6 +176,6 @@ export function startMusic() {
   musicOn = true;
   if (!ac || musicTimer) return;
   nextNote = ac.currentTime + 0.1;
-  musicTimer = setInterval(schedule, 60);
+  musicTimer = setInterval(schedule, 50);
 }
 export function setIntense(v) { intense = v; }
