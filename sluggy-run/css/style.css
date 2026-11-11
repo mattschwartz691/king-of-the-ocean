@@ -2,6 +2,7 @@
   --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px); --out: #3b2414; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: #0d3a3c; font-family: var(--font); color: #fff; overscroll-behavior: none; touch-action: none; }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: none; }
 #cv { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .hidden { display: none !important; }
 button { font-family: inherit; border: 0; cursor: pointer; color: inherit; }

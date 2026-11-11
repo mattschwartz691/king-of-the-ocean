@@ -322,7 +322,7 @@ function draw() {
 const screens = ['title', 'over', 'shop', 'pause'];
 function show(name) { for (const s of screens) $('scr-' + s).classList.toggle('hidden', s !== name); $('hud').classList.toggle('hidden', !!name && name !== 'pause'); }
 let paused = false, shopFrom = 'title', active3 = false, overId = 0;
-const R3 = createRun3D({ g, save, sfx, bot: BOT, tile, banner, bump, setHot, setTempo, drawPills, view: () => ({ W, H, DPR }), onOver: (res) => showOver(res) });
+const R3 = createRun3D({ g, save, sfx, bot: BOT, glCanvas: $('gl'), noGL: new URLSearchParams(location.search).has('flat'), tile, banner, bump, setHot, setTempo, drawPills, view: () => ({ W, H, DPR }), onOver: (res) => showOver(res) });
 function setMode(m) { save.mode = m; persist(); sfx.click(); refreshTitle(); }
 function refreshTitle() {
   const is3 = save.mode === '3d', b = is3 ? save.best3 : save.best, d = is3 ? save.bestDist3 : save.bestDist;
@@ -336,7 +336,7 @@ function startRun() {
   const z = ZONES[0]; banner(z.name, z.sub);
   const key = is3 ? 'runs3' : 'runs', h = $(is3 ? 'hint3' : 'hint'); $('hint').classList.add('hidden'); $('hint3').classList.add('hidden');
   if (save[key] < 3) { h.classList.remove('hidden'); h.style.animation = 'none'; void h.offsetWidth; h.style.animation = ''; }
-  if (is3) { reset('title'); R3.start(); active3 = true; } else { active3 = false; reset('run'); }
+  if (is3) { reset('title'); R3.start(); active3 = true; } else { active3 = false; R3.hide(); reset('run'); }
   save[key]++; persist();
 }
 const QUIPS = {
@@ -355,7 +355,7 @@ function showOver(res) {
   const el = $('overScore'), t0 = performance.now(), dur = Math.min(1200, 400 + sc), id = ++overId; let lastTick = 0;
   (function tick(now) { const u = clamp((now - t0) / dur, 0, 1), v = Math.round(sc * (1 - Math.pow(1 - u, 3))); el.textContent = v; if (now - lastTick > 60 && u < 1) { lastTick = now; sfx.tick(u * 20); } if (u < 1 && id === overId) requestAnimationFrame(tick); else if (isBest && id === overId) sfx.best(); })(t0);
 }
-function toTitle() { active3 = false; overId++; reset('title'); show('title'); refreshTitle(); setHot(false); }
+function toTitle() { active3 = false; R3.hide(); overId++; reset('title'); show('title'); refreshTitle(); setHot(false); }
 function openShop(from) { shopFrom = from; sfx.click(); show('shop'); renderShop(); }
 function renderShop() {
   $('shopBank').textContent = save.bank; const box = $('hats'); box.innerHTML = '';

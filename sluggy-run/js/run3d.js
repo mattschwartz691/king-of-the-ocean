@@ -1,5 +1,6 @@
 // Sluggy Run — 3D chase mode: behind-the-slug, three lanes, swipe to dodge.
 import { drawCoin, PAL, OUT } from '../../sluggy/js/art.js';
+import { createGL } from './gl3d.js';
 import { ZONES, TW, TH, drawObstacle, drawPower, drawHat, POWERS, drawProp, drawWormFront } from './zones.js';
 
 const TAU = Math.PI * 2, rnd = Math.random, lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -45,9 +46,11 @@ function drawSlugBack(g, o) {
 
 export function createRun3D(env) {
   const { g, save, sfx } = env, $ = (id) => document.getElementById(id);
-  let W = 0, H = 0, DPR = 1, f = 300, hor = 200, camH = 150, R = null, shownS = -1, shownD = -1;
+  let W = 0, H = 0, DPR = 1, f = 300, hor = 200, camH = 150, R = null, shownS = -1, shownD = -1, GL;
   function layout() { ({ W, H, DPR } = env.view()); f = Math.min(W * 0.7, H * 0.62); hor = H * (W > H ? 0.28 : 0.33); camH = ((H * 0.77 - hor) * ZP) / f; }
   function reset() {
+    if (GL === undefined) { try { GL = env.noGL ? null : createGL(env.glCanvas, { tile: env.tile, ZLEN }); } catch (err) { console.warn('WebGL unavailable, using flat renderer', err); GL = null; } }
+    if (GL) { GL.reset(); GL.show(true); }
     layout(); shownS = shownD = -1;
     R = { state: 'run', t: 0, z: 0, speed: 0, camX: 0, bend: 0, bonus: 0, coins: 0, stomps: 0, combo: 0, zi: 0, prevZ: -1, fade: 1, shake: 0, inv: 0, deadT: 0, done: false, cause: '',
       p: { lane: 1, x: 0, y: 0, vy: 0, on: true, slide: 0, lean: 0, rot: 0, sq: 0, buf: 0 }, pw: { magnet: 0, rush: 0, x2: 0, shield: false },
@@ -56,7 +59,7 @@ export function createRun3D(env) {
   const score = () => Math.floor(R.z / M) + R.bonus;
   const moonNow = () => R.zi % NZ === 6;
   // world -> screen. dz = distance in front of the camera
-  function P(x, y, dz) { const k = f / dz, u = dz / ZFAR; return [W / 2 + (x - R.camX) * k + R.bend * u * u * W * 0.85, hor + (camH - y) * k, k]; }
+  function P(x, y, dz) { if (GL) return GL.project(x, y, dz, ZP); const k = f / dz, u = dz / ZFAR; return [W / 2 + (x - R.camX) * k + R.bend * u * u * W * 0.85, hor + (camH - y) * k, k]; }
 
   // ---------------------------------------------------------------- generator
   function add(k, lane, z, o) { const e = { k, lane, x: laneX(lane), y: 0, z, v: (rnd() * 2) | 0, zi: zmod(z), dead: false, ...o }; R.ents.push(e); return e; }
@@ -237,6 +240,10 @@ export function createRun3D(env) {
   function draw() {
     if (!R) return; ({ W, H, DPR } = env.view()); if (W !== draw.w || H !== draw.h) { draw.w = W; draw.h = H; layout(); }
     g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (GL) { GL.resize(W, H, DPR); GL.render(R, ZP, save.hat); g.clearRect(0, 0, W, H); } else drawWorld2D();
+    drawOverlay();
+  }
+  function drawWorld2D() {
     if (R.shake > 0) g.translate((rnd() - 0.5) * R.shake * 26, (rnd() - 0.5) * R.shake * 26);
     const zi = R.zi % NZ; if (R.fade < 1 && R.prevZ >= 0) { backdrop(R.prevZ, 1); backdrop(zi, R.fade); } else backdrop(zi, 1);
     ground();
@@ -261,10 +268,13 @@ export function createRun3D(env) {
       else { if (it.e.k !== 'coin' && it.e.k !== 'salt') shadow(it.e.x, it.dz, 30, 0.2); drawEnt(it.e, it.dz); }
     }
     g.globalAlpha = 1;
+  }
+  function drawOverlay() {
+    const zi = R.zi % NZ;
     for (const q of R.parts) { g.globalAlpha = 1 - q.life / q.max; g.fillStyle = q.c; g.beginPath(); g.arc(q.x, q.y, q.r, 0, TAU); g.fill(); }
     g.globalAlpha = 1;
     if (R.pw.rush > 0 || R.speed > 1000) { // speed streaks from the vanishing point
-      g.strokeStyle = `rgba(255,255,255,${R.pw.rush > 0 ? 0.5 : 0.18})`; g.lineWidth = 2.5; const cx = W / 2 + R.bend * W * 0.3;
+      g.strokeStyle = `rgba(255,255,255,${R.pw.rush > 0 ? 0.5 : 0.18})`; g.lineWidth = 2.5; const cx = W / 2 + R.bend * W * 0.3, hor = H * 0.36;
       for (let i = 0; i < 16; i++) { const a = hash(i) * TAU, u = (R.t * 2.2 + hash(i + 9)) % 1, r0 = (0.15 + u * 0.9) * Math.max(W, H) * 0.7; g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, hor + Math.sin(a) * r0); g.lineTo(cx + Math.cos(a) * r0 * 1.22, hor + Math.sin(a) * r0 * 1.22); g.stroke(); }
     }
     for (const q of R.floats) { g.globalAlpha = q.life > 0.7 ? (1 - q.life) / 0.3 : 1; const pop = q.life < 0.12 ? 0.6 + (q.life / 0.12) * 0.5 : 1.1 - Math.min(0.1, (q.life - 0.12) * 0.5), px = q.s * pop; g.font = `900 ${px}px ui-rounded, system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.lineWidth = px * 0.24; g.strokeStyle = OUT; const x = clamp(q.x, 90, W - 90); g.strokeText(q.txt, x, q.y); g.fillStyle = q.c; g.fillText(q.txt, x, q.y); }
@@ -284,5 +294,5 @@ export function createRun3D(env) {
     } else { touches.delete(e.pointerId); if (!t.used && type === 'up') jump(); }
   }
   function key(code) { if (code === 'ArrowLeft' || code === 'KeyA') move(-1); else if (code === 'ArrowRight' || code === 'KeyD') move(1); else if (code === 'ArrowUp' || code === 'KeyW' || code === 'Space') jump(); else if (code === 'ArrowDown' || code === 'KeyS') slide(); }
-  return { start: reset, step, draw, pointer, key, running: () => !!R && R.state === 'run', get R() { return R; }, sim(sec) { for (let i = 0; i < sec * 60 && R.state === 'run'; i++) step(1 / 60); return { state: R.state, m: Math.round(R.z / M), cause: R.cause, score: score(), coins: R.coins, stomps: R.stomps, zi: R.zi }; } };
+  return { start: reset, step, draw, pointer, key, hide() { if (GL) GL.show(false); }, get gl() { return GL; }, running: () => !!R && R.state === 'run', get R() { return R; }, sim(sec) { for (let i = 0; i < sec * 60 && R.state === 'run'; i++) step(1 / 60); return { state: R.state, m: Math.round(R.z / M), cause: R.cause, score: score(), coins: R.coins, stomps: R.stomps, zi: R.zi }; } };
 }
