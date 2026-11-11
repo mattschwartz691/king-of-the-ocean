@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sluggy's Business</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sluggy's Business">
+<meta name="theme-color" content="#2f8f3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="app" class="hidden">
+  <div id="hud">
+    <div class="pl" id="pl0"><div class="av" id="av0"></div><div class="info"><div class="nm" id="nm0">You</div><div class="cash">$<span id="cash0">10</span></div><div class="inc" id="inc0"></div></div></div>
+    <div class="mid"><div id="dayLbl">Day 1</div><div id="dayDots"></div><div id="trend"></div></div>
+    <div class="pl right" id="pl1"><div class="info"><div class="nm" id="nm1">Rival</div><div class="cash">$<span id="cash1">10</span></div><div class="inc" id="inc1"></div></div><div class="av" id="av1"></div></div>
+  </div>
+  <div id="boardSlot"></div>
+  <div id="panel">
+    <div id="cards"></div>
+    <div id="actions">
+      <div id="leftBox">Cash left<b id="cashLeft">$10</b></div>
+      <button id="btnLock" class="btn btn-go"><b id="lockLbl">Lock in bids</b><i id="timerBar"></i></button>
+    </div>
+  </div>
+  <button id="btnQuit" aria-label="Leave game">✕</button>
+</div>
+<div id="banner"></div>
+<div id="quip"></div>
+
+<section id="scr-menu" class="screen">
+  <div class="menu-wrap">
+    <div class="logo">
+      <div class="logo-top">Sluggy's</div>
+      <div class="logo-main">BUSINESS</div>
+      <div id="menuSlug" class="slot"></div>
+      <div class="bubble">“It's pronounced <b>BIDNESS</b>.”</div>
+    </div>
+    <div class="panel menu-panel">
+      <label class="name-row"><span>Your name</span><input id="inName" maxlength="12" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"></label>
+      <button class="btn btn-gold" id="btnSolo"><b>Solo</b><small id="soloSub">Take on WormCo</small></button>
+      <div class="btn-row">
+        <button class="btn btn-teal" id="btnHost"><b>Host 1v1</b><small>Slug vs slug</small></button>
+        <button class="btn btn-blue" id="btnJoin"><b>Join 1v1</b><small>Enter a code</small></button>
+      </div>
+      <div class="link-row">
+        <button class="link" id="btnHow">How to play</button>
+        <a class="link" href="../">All games</a>
+        <button class="link" id="btnSound">Sound: on</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="scr-solo" class="screen hidden">
+  <div class="panel card">
+    <h2>Hostile Takeover</h2>
+    <div class="boss-row"><div id="bossSlot" class="slot"></div><div><div id="lvlNum" class="tiny">WORMCO · LEVEL 1 OF 5</div><div id="lvlName" class="big">Wiggles the Intern</div></div></div>
+    <div id="lvlPips" class="pips"></div>
+    <p id="lvlDesc" class="muted"></p>
+    <div id="soloStats" class="tiny"></div>
+    <button class="btn btn-gold" id="btnSoloGo"><b>Open for bidness!</b></button>
+    <button class="link" data-back>Back</button>
+  </div>
+</section>
+
+<section id="scr-join" class="screen hidden">
+  <div class="panel card">
+    <h2>Join a 1v1</h2>
+    <p class="muted">Enter the 4-letter code on the host's screen.</p>
+    <input id="inCode" class="code-input" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" enterkeyhint="go">
+    <button class="btn btn-blue" id="btnJoinGo"><b>Join</b></button>
+    <button class="link" data-back>Back</button>
+  </div>
+</section>
+
+<section id="scr-lobby" class="screen hidden">
+  <div class="panel card">
+    <h2>1v1 Lobby</h2>
+    <div class="code-box"><span>Code</span><b id="lobbyCode">····</b></div>
+    <div id="qr" class="qr"></div>
+    <div class="slots"><div class="pslot" id="ls0"></div><div class="vs">VS</div><div class="pslot" id="ls1"></div></div>
+    <p class="muted small" id="lobbyHint">Your rival scans the code with their camera, or opens this page and taps Join 1v1.</p>
+    <button class="btn btn-gold" id="btnStart" disabled><b>Start</b></button>
+    <button class="link" id="btnLeaveLobby">Leave</button>
+  </div>
+</section>
+
+<section id="scr-how" class="screen hidden">
+  <div class="panel card how">
+    <h2>How to do Bidness</h2>
+    <ul>
+      <li><b>1 · Bid.</b> Every day 3 shops go up for auction. Secretly split your cash between them. Highest bid wins the shop and pays; the loser keeps their money.</li>
+      <li><b>2 · Get paid.</b> Each shop pays you every day. Shops earn <b>+$1 for every neighbor you own</b> (the fountain counts), so build next to yourself.</li>
+      <li><b>3 · Lead the market.</b> Own more of a shop type than your rival for a <b>+$2 crown bonus</b>. The day's <b>hot trend</b> pays +$2 per shop.</li>
+      <li><b>4 · Beware worms!</b> A lot nobody bids on becomes a worm hole (−$1 to its neighbors). On raid days, outbid your rival for the <b>Early Bird</b> or worms shut down your best shop.</li>
+      <li><b>5 · Win.</b> Richest slug after 8 days wins. The last payday counts double!</li>
+    </ul>
+    <button class="btn btn-teal" data-back><b>Got it</b></button>
+  </div>
+</section>
+
+<section id="scr-over" class="screen hidden">
+  <div class="panel card over">
+    <div id="overSlot" class="slot"></div>
+    <h2 id="overTitle"></h2>
+    <p id="overSub" class="muted"></p>
+    <div class="final"><div class="fin" id="fin0"><span></span><b>$0</b></div><div class="fin" id="fin1"><span></span><b>$0</b></div></div>
+    <div id="overRank" class="rank"></div>
+    <div class="btn-row">
+      <button class="btn btn-gold" id="btnAgain"><b>Play again</b></button>
+      <button class="btn btn-teal" id="btnOverMenu"><b>Menu</b></button>
+    </div>
+    <p class="muted small hidden" id="overWait">Waiting for the host…</p>
+  </div>
+</section>
+
+<canvas id="fx"></canvas>
+<div id="toast"></div>
+<div id="safe"></div>
+
+<script src="../vendor/peerjs.min.js" defer></script>
+<script src="../vendor/qrcode.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

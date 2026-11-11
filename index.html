@@ -2,151 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>King of the Ocean</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Game Night</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="King of the Ocean">
-<meta name="theme-color" content="#04233f">
-<meta name="description" content="Steal the crown. Rule the reef. A sawfish party brawler for 1–4 players.">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" type="image/png" href="icon-180.png">
-<link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#1b1140">
+<link rel="apple-touch-icon" href="ocean/icon-180.png">
+<link rel="icon" type="image/png" href="ocean/icon-180.png">
+<style>
+  :root { --font: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", system-ui, -apple-system, sans-serif; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; font-family: var(--font); color: #fff; }
+  body { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    padding: calc(env(safe-area-inset-top, 0px) + 20px) calc(env(safe-area-inset-right, 0px) + 18px) calc(env(safe-area-inset-bottom, 0px) + 20px) calc(env(safe-area-inset-left, 0px) + 18px);
+    background: radial-gradient(ellipse at 30% 20%, #4b2a9c, transparent 60%), radial-gradient(ellipse at 80% 90%, #0c6fa8, transparent 55%), #1b1140; overflow-x: hidden; }
+  h1 { margin: 0; font-size: clamp(26px, 6.5vw, 44px); font-weight: 900; text-align: center; line-height: 1.05; text-shadow: 0 4px 0 rgba(0, 0, 0, 0.3); }
+  h1 small { display: block; font-size: 0.42em; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #ffd84a; margin-bottom: 6px; }
+  .games { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 760px; }
+  a.game { flex: 1 1 260px; max-width: 360px; text-decoration: none; color: #fff; border-radius: 28px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+    border: 3px solid rgba(255, 255, 255, 0.35); box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35), 0 20px 40px rgba(0, 0, 0, 0.35); transition: transform 0.12s; animation: rise 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; }
+  a.game:nth-child(2) { animation-delay: 0.1s; }
+  a.game:active { transform: translateY(5px) scale(0.98); }
+  @keyframes rise { from { transform: translateY(40px) scale(0.9); opacity: 0; } }
+  .ocean { background: linear-gradient(180deg, #2bb7e6, #0b5c9c); }
+  .sluggy { background: linear-gradient(180deg, #7ed957, #2f8f3a); }
+  .game img { width: min(46vw, 170px); aspect-ratio: 1; border-radius: 26px; border: 3px solid rgba(255, 255, 255, 0.7); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); animation: bob 3.5s ease-in-out infinite; }
+  .sluggy img { animation-delay: -1.7s; }
+  @keyframes bob { 50% { transform: translateY(-6px) rotate(1.5deg); } }
+  .game b { font-size: 27px; font-weight: 900; line-height: 1; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); }
+  .game span { font-size: 14px; font-weight: 700; opacity: 0.95; line-height: 1.3; }
+  .game i { font-style: normal; font-size: 12px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: rgba(0, 0, 0, 0.25); padding: 4px 11px; border-radius: 999px; }
+  .play { margin-top: 2px; background: #ffd84a; color: #4d2500; font-weight: 900; font-size: 18px; padding: 9px 30px; border-radius: 999px; box-shadow: 0 4px 0 #a85a00; }
+  .col { display: contents; }
+  @media (max-width: 700px), (max-height: 520px) {
+    body { gap: 16px; }
+    a.game { flex: 1 1 100%; max-width: 520px; flex-direction: row; text-align: left; padding: 14px; gap: 14px; }
+    .game img { width: min(32vw, 124px); border-radius: 20px; flex: none; }
+    .col { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+    .game b { font-size: 23px; } .game span { font-size: 13px; } .game i { font-size: 10.5px; } .play { font-size: 16px; padding: 7px 24px; }
+  }
+  @media (orientation: landscape) and (max-height: 520px) { .games { flex-wrap: nowrap; } a.game { flex: 1 1 0; } .game img { width: 96px; } .game span { display: none; } }
+</style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff6b0"/><stop offset=".45" stop-color="#ffcb2e"/><stop offset="1" stop-color="#f08c00"/>
-    </linearGradient>
-    <symbol id="crown" viewBox="-24 -19 48 33">
-      <path d="M-17 10 L-20 -7 L-9 1 L0 -14 L9 1 L20 -7 L17 10 Z" fill="url(#gold)" stroke="#7a4300" stroke-width="2.4" stroke-linejoin="round"/>
-      <rect x="-16.5" y="4.5" width="33" height="5" fill="#e88a00"/>
-      <circle cx="-20" cy="-7" r="3" fill="#fff3a8" stroke="#7a4300" stroke-width="1.6"/>
-      <circle cx="0" cy="-14" r="3" fill="#fff3a8" stroke="#7a4300" stroke-width="1.6"/>
-      <circle cx="20" cy="-7" r="3" fill="#fff3a8" stroke="#7a4300" stroke-width="1.6"/>
-      <circle cx="0" cy="6.8" r="2.5" fill="#ff4d6d"/><circle cx="-9.5" cy="6.8" r="1.9" fill="#4dc9ff"/><circle cx="9.5" cy="6.8" r="1.9" fill="#4dc9ff"/>
-    </symbol>
-  </defs>
-</svg>
-
-<canvas id="game"></canvas>
-
-<div id="hud" class="hidden">
-  <div id="chips"></div>
-  <button id="btnQuit" aria-label="Leave game">✕</button>
-</div>
-<div id="banner"></div>
-<div id="count"></div>
-
-<!-- MENU -->
-<section id="scr-menu" class="screen">
-  <div class="menu-wrap">
-    <div class="logo">
-      <svg class="logo-crown"><use href="#crown"/></svg>
-      <div class="logo-king">KING</div>
-      <div class="logo-of">— of the —</div>
-      <div class="logo-ocean">OCEAN</div>
-      <div class="tagline">Steal the crown. Rule the reef.</div>
-    </div>
-    <div class="panel menu-panel">
-      <label class="name-row"><span>Your name</span>
-        <input id="inName" maxlength="12" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
-      </label>
-      <button class="btn btn-gold" id="btnSolo"><b>Solo</b><small id="soloSub">Climb the ranks</small></button>
-      <div class="btn-row">
-        <button class="btn btn-blue" id="btnHost"><b>Host Party</b><small>2–4 players</small></button>
-        <button class="btn btn-teal" id="btnJoin"><b>Join Party</b><small>Enter a code</small></button>
-      </div>
-      <div class="link-row">
-        <button class="link" id="btnHow">How to play</button>
-        <button class="link" id="btnSound">Sound: on</button>
-      </div>
-    </div>
+  <h1><small>Game Night</small>Which game do you want to play?</h1>
+  <div class="games">
+    <a class="game ocean" href="ocean/">
+      <img src="ocean/icon-512.png" alt="">
+      <div class="col"><b>Ocean Game</b><span>King of the Ocean — steal the crown and rule the reef as a sawfish.</span><i>Action · 1–4 players</i><div class="play">Play</div></div>
+    </a>
+    <a class="game sluggy" href="sluggy/">
+      <img src="sluggy/icon-512.png" alt="">
+      <div class="col"><b>Sluggy's Business</b><span>Outbid the worms and build a garden empire. It's pronounced “bidness.”</span><i>Strategy · 1–2 players</i><div class="play">Play</div></div>
+    </a>
   </div>
-</section>
-
-<!-- SOLO -->
-<section id="scr-solo" class="screen hidden">
-  <div class="panel card">
-    <h2>Solo Ladder</h2>
-    <div class="rank-badge"><svg><use href="#crown"/></svg><div><div id="rankNum">Rank 1 of 10</div><div id="rankName">Tide Pool Tadpole</div></div></div>
-    <div id="rankPips" class="pips"></div>
-    <p id="rankDesc" class="muted">Beat three rival sawfish to climb the ladder.</p>
-    <div id="soloStats" class="stats-line"></div>
-    <button class="btn btn-gold" id="btnSoloGo"><b>Dive in!</b></button>
-    <button class="link" data-back>Back</button>
-  </div>
-</section>
-
-<!-- JOIN -->
-<section id="scr-join" class="screen hidden">
-  <div class="panel card">
-    <h2>Join a Party</h2>
-    <p class="muted">Enter the 4-letter code on the host's screen.</p>
-    <input id="inCode" class="code-input" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" enterkeyhint="go">
-    <button class="btn btn-teal" id="btnJoinGo"><b>Join</b></button>
-    <button class="link" data-back>Back</button>
-  </div>
-</section>
-
-<!-- LOBBY -->
-<section id="scr-lobby" class="screen hidden">
-  <div class="panel card lobby">
-    <div class="lobby-left">
-      <h2 id="lobbyTitle">Party Lobby</h2>
-      <div class="code-box"><span>Party code</span><b id="lobbyCode">····</b></div>
-      <div id="qr" class="qr"></div>
-      <p class="muted small" id="lobbyHint">Friends: scan the code with your camera, or open this page and tap Join Party.</p>
-    </div>
-    <div class="lobby-right">
-      <div id="slots" class="slots"></div>
-      <label class="check" id="fillRow"><input type="checkbox" id="chkFill" checked><span>Fill empty spots with bots</span></label>
-      <button class="btn btn-gold" id="btnStart"><b>Start Game</b></button>
-      <p class="muted small hidden" id="lobbyWait">Waiting for the host to start…</p>
-      <button class="link" id="btnLeaveLobby">Leave party</button>
-    </div>
-  </div>
-</section>
-
-<!-- HOW TO -->
-<section id="scr-how" class="screen hidden">
-  <div class="panel card how">
-    <h2>How to Play</h2>
-    <ul>
-      <li><i class="ic ic-crown"><svg><use href="#crown"/></svg></i><span><b>Wear the crown.</b> Your reign bar fills while you hold it. First to <b>45 seconds</b> is King of the Ocean.</span></li>
-      <li><i class="ic" style="--c:#7df2ff">⟫</i><span><b>Saw Dash.</b> Drag anywhere on the left to swim. Tap the right side to dash — hit a rival with your saw to stun them and knock the crown loose.</span></li>
-      <li><i class="ic" style="--c:#ffc83a">◖</i><span><b>Feeding frenzy.</b> Slice through 6 fish for a burst of speed and rapid dashes. The golden fish fills it instantly.</span></li>
-      <li><i class="ic" style="--c:#5dffb0">●</i><span><b>Bubbles.</b> Speed, Shield and Zap power-ups float around the reef.</span></li>
-      <li><i class="ic" style="--c:#ff8ae0">✺</i><span><b>Jellyfish sting!</b> Avoid them — or dash through to pop them.</span></li>
-    </ul>
-    <p class="muted small">Tip: on iPhone, tap Share → “Add to Home Screen” to play full-screen. Landscape feels best.</p>
-    <button class="btn btn-blue" data-back><b>Got it</b></button>
-  </div>
-</section>
-
-<!-- RESULTS -->
-<section id="scr-over" class="screen hidden">
-  <div class="panel card over">
-    <svg class="over-crown"><use href="#crown"/></svg>
-    <h2 id="overTitle">King of the Ocean</h2>
-    <p id="overSub" class="muted"></p>
-    <div id="overTable" class="table"></div>
-    <div class="btn-row">
-      <button class="btn btn-gold" id="btnAgain"><b>Play again</b></button>
-      <button class="btn btn-blue" id="btnOverMenu"><b>Menu</b></button>
-    </div>
-    <p class="muted small hidden" id="overWait">Waiting for the host…</p>
-  </div>
-</section>
-
-<div id="toast"></div>
-<div id="safe"></div>
-
-<script src="vendor/peerjs.min.js" defer></script>
-<script src="vendor/qrcode.js" defer></script>
-<script type="module" src="js/main.js"></script>
 </body>
 </html>
